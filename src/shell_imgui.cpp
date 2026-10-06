@@ -3060,26 +3060,26 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     io.FontDefault = g_ui;
 
     // Merge Chinese glyphs from system font into every face.
-    // Try multiple common CJK font paths; first one that exists wins.
-    // Winlator/Wine maps Z: to Android root, so /system/fonts is reachable as Z:\system\fonts.
+    // In Winlator/Wine, C:\Windows\Fonts maps to the Wine prefix's drive_c\Windows\Fonts.
+    // Use CreateFileA (native Windows API) to check existence - more reliable than fopen under Wine.
     static const char *cn_font_paths[] = {
-        "C:\\Windows\\Fonts\\msyh.ttc",      // 微软雅黑 (Win10/11 default)
+        "C:\\Windows\\Fonts\\msyh.ttc",      // 微软雅黑
         "C:\\Windows\\Fonts\\msyhbd.ttc",    // 微软雅黑粗体
+        "C:\\Windows\\Fonts\\msyhl.ttc",     // 微软雅黑Light
         "C:\\Windows\\Fonts\\simhei.ttf",    // 黑体
         "C:\\Windows\\Fonts\\simsun.ttc",    // 宋体
         "C:\\Windows\\Fonts\\Deng.ttf",      // 等线
-        "Z:\\system\\fonts\\NotoSansCJK-Regular.ttc",  // Android CJK (Winlator Z: drive)
-        "Z:\\system\\fonts\\NotoSansSC-Regular.otf",   // Android Simplified Chinese
-        "/system/fonts/NotoSansCJK-Regular.ttc",       // Linux/Android direct path
-        "/system/fonts/NotoSansSC-Regular.otf",
-        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",  // Linux fallback
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         nullptr
     };
     const char *cn_font = nullptr;
     for (int i = 0; cn_font_paths[i]; ++i) {
-        FILE *fp = fopen(cn_font_paths[i], "rb");
-        if (fp) { fclose(fp); cn_font = cn_font_paths[i]; break; }
+        HANDLE h = CreateFileA(cn_font_paths[i], GENERIC_READ, FILE_SHARE_READ,
+                               nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (h != INVALID_HANDLE_VALUE) {
+            CloseHandle(h);
+            cn_font = cn_font_paths[i];
+            break;
+        }
     }
     if (cn_font) {
         const ImWchar *cn_ranges = io.Fonts->GetGlyphRangesChineseFull();
@@ -3096,7 +3096,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
         }
         { char m[128]; snprintf(m, sizeof(m), "Chinese font merged: %s", cn_font); aio_diag_log(m); }
     } else {
-        aio_diag_log("WARNING: no CJK font found, Chinese text will show as boxes");
+        aio_diag_log("WARNING: no CJK font found in C:\\Windows\\Fonts, Chinese will show as boxes");
     }
     aio_diag_log("ImGui context + fonts loaded");
 
