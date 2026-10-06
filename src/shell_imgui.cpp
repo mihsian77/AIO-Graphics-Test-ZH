@@ -2971,12 +2971,12 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     wc.lpszClassName = "AIOImGuiShell";
     RegisterClassExA(&wc);
 
-    // Empty native caption: the shell draws its OWN titlebar ("AIO Graphics Test" +
-    // version) as ImGui chrome. Under Wine the native window caption would otherwise
-    // render a duplicate "AIO Graphics Test" that overlaps/bleeds through the top-left
-    // of the ImGui titlebar. We also never SetWindowText a live FPS string (the FPS
-    // lives only in the in-viewport HUD), so nothing dynamic can bleed here.
-    HWND hwnd = CreateWindowA(wc.lpszClassName, "", WS_OVERLAPPEDWINDOW, 100, 100,
+    // Empty native caption + no WS_CAPTION: the shell draws its OWN titlebar ("AIO
+    // Graphics Test" + version) as ImGui chrome. Under Wine/Winlator the native
+    // window caption would render a duplicate titlebar (double-chrome), so we strip
+    // WS_CAPTION while keeping resize frame + min/max/close via the ImGui chrome.
+    HWND hwnd = CreateWindowA(wc.lpszClassName, "",
+                              WS_OVERLAPPEDWINDOW & ~WS_CAPTION, 100, 100,
                               1180, 720, nullptr, nullptr, hInstance, nullptr);
     if (!hwnd) {
         aio_diag_log("aio_run_imgui_shell: CreateWindow FAILED");
