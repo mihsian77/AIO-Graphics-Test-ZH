@@ -3059,15 +3059,21 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     g_big_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 24.0f, &bigcfg);
     io.FontDefault = g_ui;
 
-    // Merge Chinese glyphs from system font into every face (Winlator/Wine has msyh.ttc).
+    // Merge Chinese glyphs from system font into every face.
     // Try multiple common CJK font paths; first one that exists wins.
+    // Winlator/Wine maps Z: to Android root, so /system/fonts is reachable as Z:\system\fonts.
     static const char *cn_font_paths[] = {
         "C:\\Windows\\Fonts\\msyh.ttc",      // 微软雅黑 (Win10/11 default)
         "C:\\Windows\\Fonts\\msyhbd.ttc",    // 微软雅黑粗体
         "C:\\Windows\\Fonts\\simhei.ttf",    // 黑体
         "C:\\Windows\\Fonts\\simsun.ttc",    // 宋体
         "C:\\Windows\\Fonts\\Deng.ttf",      // 等线
+        "Z:\\system\\fonts\\NotoSansCJK-Regular.ttc",  // Android CJK (Winlator Z: drive)
+        "Z:\\system\\fonts\\NotoSansSC-Regular.otf",   // Android Simplified Chinese
+        "/system/fonts/NotoSansCJK-Regular.ttc",       // Linux/Android direct path
+        "/system/fonts/NotoSansSC-Regular.otf",
         "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",  // Linux fallback
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         nullptr
     };
     const char *cn_font = nullptr;
@@ -3076,7 +3082,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
         if (fp) { fclose(fp); cn_font = cn_font_paths[i]; break; }
     }
     if (cn_font) {
-        const ImWchar *cn_ranges = io.Fonts->GetGlyphRangesChineseSimplifiedCommon();
+        const ImWchar *cn_ranges = io.Fonts->GetGlyphRangesChineseFull();
         struct { ImFont **face; float size; } faces[] = {
             {&g_ui, 14.0f}, {&g_ui_big, 19.0f}, {&g_mono, 12.0f},
             {&g_mono_sm, 10.0f}, {&g_mono_bg, 20.0f},
