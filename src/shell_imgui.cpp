@@ -642,12 +642,12 @@ static const Test kDisplay[] = {
     {"HDR", "Direct3D 11", "d3d11 -> DXGI HDR10 -> DXVK", "Flip discard (vsync)", H_DX11, 0, false},
 };
 static const Group kGroups[] = {
-    {"Graphics Backends", kBackends, (int)(sizeof(kBackends) / sizeof(kBackends[0]))},
-    {"Display Tests", kDisplay, (int)(sizeof(kDisplay) / sizeof(kDisplay[0]))},
-    {"DX11 Scenes", kScenes, (int)(sizeof(kScenes) / sizeof(kScenes[0]))},
-    {"Showcase Demos", kDemos, (int)(sizeof(kDemos) / sizeof(kDemos[0]))},
-    {"Scaling Tests", kScaling, (int)(sizeof(kScaling) / sizeof(kScaling[0]))},
-    {"Tools", kTools, (int)(sizeof(kTools) / sizeof(kTools[0]))},
+    {"图形后端", kBackends, (int)(sizeof(kBackends) / sizeof(kBackends[0]))},
+    {"显示测试", kDisplay, (int)(sizeof(kDisplay) / sizeof(kDisplay[0]))},
+    {"DX11场景", kScenes, (int)(sizeof(kScenes) / sizeof(kScenes[0]))},
+    {"展示演示", kDemos, (int)(sizeof(kDemos) / sizeof(kDemos[0]))},
+    {"缩放测试", kScaling, (int)(sizeof(kScaling) / sizeof(kScaling[0]))},
+    {"工具", kTools, (int)(sizeof(kTools) / sizeof(kTools[0]))},
 };
 static const int kGroupCount = (int)(sizeof(kGroups) / sizeof(kGroups[0]));
 static int total_tests() {
@@ -658,7 +658,7 @@ static int total_tests() {
 
 // Current selection.
 static const Test *g_sel = &kBackends[3];  // Direct3D 11 preselected (matches mockup)
-static const char *g_sel_group = "Graphics Backends";
+static const char *g_sel_group = "图形后端";
 
 static bool is_hdr_test(const Test *t) { return t == &kDisplay[0]; }
 
@@ -999,7 +999,7 @@ static int cube_scene_for(const Test *t, const char *group, int *draws_out) {
 // which uses the in-device DX11-scene path, or a non-backend row). Phase 4: these
 // embed IN the viewport via offscreen readback; nothing launches a window.
 static const AioEmbedBackend *embed_backend_for(const Test *t, const char *group) {
-    if (strcmp(group, "Graphics Backends") != 0) return nullptr;
+    if (strcmp(group, "图形后端") != 0) return nullptr;
     int li = 0;
     const Group *grp = sel_group_and_index(t, group, &li);
     if (!grp || grp->items != kBackends) return nullptr;
@@ -1390,7 +1390,7 @@ static void draw_toolbar(ImDrawList *dl, ImVec2 o, float w, float h) {
     float rx = o.x + w - 12.0f - themeW;
     // theme button
     char tlabel[24];
-    snprintf(tlabel, sizeof(tlabel), "Theme  %s", g_dark ? "Dark" : "Light");
+    snprintf(tlabel, sizeof(tlabel), "主题  %s", g_dark ? "深色" : "浅色");
     if (chrome_button("##theme", ImVec2(rx, cy - segH * 0.5f), ImVec2(themeW, segH), tlabel, false))
         apply_theme(!g_dark);
 
@@ -1407,7 +1407,7 @@ static void draw_toolbar(ImDrawList *dl, ImVec2 o, float w, float h) {
     ImVec2 sp(sx, cy - segH * 0.5f), smx(sx + segW, cy + segH * 0.5f);
     dl->AddRectFilled(sp, smx, PAL.panel, 8.0f);
     dl->AddRect(sp, smx, PAL.line2, 8.0f, 0, 1.0f);
-    const char *segs[] = {"List", "Grid"};
+    const char *segs[] = {"列表", "网格"};
     float innerW = (segW - 4.0f) / 2.0f;
     for (int i = 0; i < 2; ++i) {
         ImVec2 bp(sx + 2.0f + i * innerW, cy - segH * 0.5f + 2.0f);
@@ -1929,11 +1929,11 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
     ImDrawList *dl = ImGui::GetWindowDrawList();
     ImVec2 base = ImGui::GetCursorScreenPos();
     float x0 = base.x + 20.0f, y0 = base.y + 18.0f, availW = w - 40.0f;
-    dp_header(dl, ImVec2(x0, y0), "Device & API report");
+    dp_header(dl, ImVec2(x0, y0), "设备与API报告");
 
     LONG st = g_gpu_state;
     if (st != TQ_DONE) {
-        text_at(dl, g_mono, 12.0f, ImVec2(x0, y0 + 30.0f), PAL.scrText, "Querying adapters...");
+        text_at(dl, g_mono, 12.0f, ImVec2(x0, y0 + 30.0f), PAL.scrText, "正在查询适配器...");
         ImGui::Dummy(ImVec2(availW, 80.0f));
         ImGui::EndChild();
         return;
@@ -1953,12 +1953,12 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
         float ry = cy + 38.0f;
         int z = 0;
         if (g_vkinfo.ok) {
-            dp_row(dl, cx, ry, colW, "Device", g_vkinfo.device, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Driver", g_vkinfo.driver, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "API version", g_vkinfo.api, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Vendor", g_vkinfo.vendor, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Type", g_vkinfo.type, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Device memory", g_vkinfo.memory, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "设备", g_vkinfo.device, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "驱动", g_vkinfo.driver, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "API版本", g_vkinfo.api, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "厂商", g_vkinfo.vendor, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "类型", g_vkinfo.type, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "显存", g_vkinfo.memory, PAL.scrText, z++ & 1); ry += 24;
             struct { const char *k; int v; } fr[] = {
                 {"geometryShader", g_vkinfo.f_geometry},
                 {"tessellationShader", g_vkinfo.f_tessellation},
@@ -1970,11 +1970,11 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
                 {"fragmentStoresAndAtomics", g_vkinfo.f_fragStoresAtomics},
             };
             for (auto &e : fr) {
-                dp_row(dl, cx, ry, colW, e.k, e.v ? "Yes" : "No", e.v ? PAL.good : PAL.bad, z++ & 1);
+                dp_row(dl, cx, ry, colW, e.k, e.v ? "支持" : "不支持", e.v ? PAL.good : PAL.bad, z++ & 1);
                 ry += 24;
             }
         } else {
-            dp_row(dl, cx, ry, colW, "Vulkan", "no ICD reachable", PAL.bad, false);
+            dp_row(dl, cx, ry, colW, "Vulkan", "无法访问驱动", PAL.bad, false);
         }
     }
     // --- OpenGL card ---
@@ -1990,12 +1990,12 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
         float ry = cy + 38.0f;
         int z = 0;
         if (g_glinfo.ok) {
-            dp_row(dl, cx, ry, colW, "Renderer", g_glinfo.renderer, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Version", g_glinfo.version, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "渲染器", g_glinfo.renderer, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "版本", g_glinfo.version, PAL.scrText, z++ & 1); ry += 24;
             dp_row(dl, cx, ry, colW, "GLSL", g_glinfo.glsl, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Vendor", g_glinfo.vendor, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "Max texture", g_glinfo.max_texture, PAL.scrText, z++ & 1); ry += 24;
-            dp_row(dl, cx, ry, colW, "MSAA samples", g_glinfo.max_samples, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "厂商", g_glinfo.vendor, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "最大纹理", g_glinfo.max_texture, PAL.scrText, z++ & 1); ry += 24;
+            dp_row(dl, cx, ry, colW, "MSAA采样", g_glinfo.max_samples, PAL.scrText, z++ & 1); ry += 24;
         } else {
             dp_row(dl, cx, ry, colW, "OpenGL", "no GL context", PAL.bad, false);
         }
@@ -2035,8 +2035,8 @@ static float screen_subtabs(ImVec2 right_top, const char *const *labels, int n, 
 static void draw_bench_history(ImVec2 base, float w, float h) {
     ImDrawList *dl = ImGui::GetWindowDrawList();
     float pad = 20.0f, x0 = base.x + pad, y0 = base.y + 14.0f, availW = w - 2.0f * pad;
-    dp_header(dl, ImVec2(x0, y0), "Benchmark history");
-    const char *tabs[2] = {"Tests", "History"};
+    dp_header(dl, ImVec2(x0, y0), "性能测试历史");
+    const char *tabs[2] = {"测试", "历史"};
     screen_subtabs(ImVec2(x0 + availW, y0 - 4.0f), tabs, 2, &g_bench_view);
 
     float listTop = y0 + 34.0f;
@@ -2116,9 +2116,9 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
 
     float pad = 20.0f, x0 = base.x + pad, y0 = base.y + 14.0f, availW = w - 2.0f * pad;
     char hbuf[64];
-    snprintf(hbuf, sizeof(hbuf), "Benchmark - %d s per test - embedded", g_bench_secs);
+    snprintf(hbuf, sizeof(hbuf), "性能测试 - 每项%d秒 - 嵌入式", g_bench_secs);
     dp_header(dl, ImVec2(x0, y0), hbuf);
-    const char *tabs[2] = {"Tests", "History"};
+    const char *tabs[2] = {"测试", "历史"};
     screen_subtabs(ImVec2(x0 + availW, y0 - 4.0f), tabs, 2, &g_bench_view);
 
     bool busy = bench_any_active();
@@ -2140,19 +2140,19 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
 
     // Controls row 2: Select All / Clear All / Run Selected / Run All.
     float cy2 = cy + 32.0f;
-    if (screen_button("##selall", ImVec2(x0, cy2), ImVec2(78, 26), "Select All", false, !busy) && !busy)
+    if (screen_button("##selall", ImVec2(x0, cy2), ImVec2(78, 26), "全选", false, !busy) && !busy)
         for (int i = 0; i < g_nbrows; ++i) g_bcheck[i] = 1;
-    if (screen_button("##clrall", ImVec2(x0 + 84, cy2), ImVec2(74, 26), "Clear All", false, !busy) && !busy)
+    if (screen_button("##clrall", ImVec2(x0 + 84, cy2), ImVec2(74, 26), "清除", false, !busy) && !busy)
         for (int i = 0; i < g_nbrows; ++i) g_bcheck[i] = 0;
     int nsel = 0;
     for (int i = 0; i < g_nbrows; ++i) if (g_bcheck[i]) nsel++;
     float raW = 96.0f, rsW = 118.0f;
     if (screen_button("##runall", ImVec2(x0 + availW - raW, cy2), ImVec2(raW, 26),
-                      busy ? "Running..." : "Run All", true, !busy) && !busy)
+                      busy ? "运行中..." : "全部运行", true, !busy) && !busy)
         bench_enqueue(-1);
     {
         char rsb[24];
-        snprintf(rsb, sizeof(rsb), "Run Selected (%d)", nsel);
+        snprintf(rsb, sizeof(rsb), "运行所选 (%d)", nsel);
         bool en = !busy && nsel > 0;
         if (screen_button("##runsel", ImVec2(x0 + availW - raW - rsW - 8.0f, cy2), ImVec2(rsW, 26),
                           rsb, true, en) && en)
@@ -2164,7 +2164,7 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
     if (busy && g_bench_ip_row >= 0) {
         float py = cy2 + 34.0f;
         char pb[96];
-        snprintf(pb, sizeof(pb), "Running  %s   %d/%d in queue   ~%.0f fps",
+        snprintf(pb, sizeof(pb), "正在运行  %s   队列 %d/%d   ~%.0f fps",
                  g_brows[g_bench_ip_row].label, g_bench_qpos, g_bench_qn, g_bench_run_fps);
         text_at(dl, g_mono_sm, 10.5f, ImVec2(x0, py), PAL.accentInk, pb);
         float barY = py + 16.0f, barW = availW;
@@ -2248,8 +2248,8 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
 static void draw_disk_history(ImVec2 base, float w, float h) {
     ImDrawList *dl = ImGui::GetWindowDrawList();
     float pad = 20.0f, x0 = base.x + pad, y0 = base.y + 14.0f, availW = w - 2.0f * pad;
-    dp_header(dl, ImVec2(x0, y0), "Disk-speed history");
-    const char *tabs[2] = {"Live", "History"};
+    dp_header(dl, ImVec2(x0, y0), "磁盘速度历史");
+    const char *tabs[2] = {"实时", "历史"};
     screen_subtabs(ImVec2(x0 + availW, y0 - 4.0f), tabs, 2, &g_disk_view);
 
     float listTop = y0 + 34.0f;
@@ -2281,7 +2281,7 @@ static void draw_disk_history(ImVec2 base, float w, float h) {
         snprintf(l1, sizeof(l1), "%s", r.ts);
         text_at(ldl, g_mono, 11.0f, ImVec2(rx + 6.0f, ry), PAL.scrText, l1);
         char l2[64];
-        snprintf(l2, sizeof(l2), "%d MB  %s  ~%s", r.size_mb, r.defeat ? "Real-Flash" : "Quick", r.cls);
+        snprintf(l2, sizeof(l2), "%d MB  %s  ~%s", r.size_mb, r.defeat ? "真实闪存" : "快速", r.cls);
         text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + 6.0f, ry + 15.0f), PAL.scrMuted, l2);
         char nb[16];
         snprintf(nb, sizeof(nb), "%.0f", r.sr); text_at(ldl, g_mono, 11.5f, ImVec2(rx + availW - 300.0f, ry + 4.0f), PAL.accentInk, nb);
@@ -2303,13 +2303,13 @@ static void draw_disk_history(ImVec2 base, float w, float h) {
 
 static const char *disk_phase_name(long p) {
     switch (p) {
-        case AIO_DISK_PHASE_SEQ_WRITE: return "Sequential write";
-        case AIO_DISK_PHASE_SEQ_READ:  return "Sequential read";
-        case AIO_DISK_PHASE_RAND_READ: return "Random 4K read";
-        case AIO_DISK_PHASE_RAND_WRITE:return "Random 4K write";
-        case AIO_DISK_PHASE_BUSTER:    return "Flushing page cache";
-        case AIO_DISK_PHASE_DONE:      return "Done";
-        default:                       return "Starting";
+        case AIO_DISK_PHASE_SEQ_WRITE: return "顺序写入";
+        case AIO_DISK_PHASE_SEQ_READ:  return "顺序读取";
+        case AIO_DISK_PHASE_RAND_READ: return "随机读取4K";
+        case AIO_DISK_PHASE_RAND_WRITE:return "随机写入4K";
+        case AIO_DISK_PHASE_BUSTER:    return "正在刷新页缓存";
+        case AIO_DISK_PHASE_DONE:      return "完成";
+        default:                       return "启动中";
     }
 }
 
@@ -2336,7 +2336,7 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
     } else {
         dp_header(dl, ImVec2(x0, y0), hbuf);
     }
-    const char *tabs[2] = {"Live", "History"};
+    const char *tabs[2] = {"实时", "历史"};
     screen_subtabs(ImVec2(x0 + availW, y0 - 4.0f), tabs, 2, &g_disk_view);
 
     // Controls: size 256/512/1024/2048, Real-Flash toggle, Run, What's this?, Clear Temp.
@@ -2350,22 +2350,22 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
     }
     bx += 6.0f;
     if (screen_button("##dflash", ImVec2(bx, cy), ImVec2(96, 26),
-                      g_disk_defeat ? "Real-Flash" : "Quick", g_disk_defeat, st != TQ_RUNNING))
+                      g_disk_defeat ? "真实闪存" : "快速", g_disk_defeat, st != TQ_RUNNING))
         g_disk_defeat = !g_disk_defeat;
     bx += 102.0f;
     if (screen_button("##drun", ImVec2(bx, cy), ImVec2(64, 26),
-                      st == TQ_RUNNING ? "..." : "Run", true, st != TQ_RUNNING) && st != TQ_RUNNING)
+                      st == TQ_RUNNING ? "..." : "运行", true, st != TQ_RUNNING) && st != TQ_RUNNING)
         disk_run_kick();
     // right cluster
     float rcx = x0 + availW;
-    if (screen_button("##dclear", ImVec2(rcx - 110.0f, cy), ImVec2(110, 26), "Clear Temp Files", false,
+    if (screen_button("##dclear", ImVec2(rcx - 110.0f, cy), ImVec2(110, 26), "清除临时文件", false,
                       st != TQ_RUNNING) && st != TQ_RUNNING) {
         char *rep = aio_disk_cleanup();
         if (rep) {
             // first line only, for the small status
             snprintf(g_disk_cleanup_msg, sizeof(g_disk_cleanup_msg), "%s",
-                     strstr(rep, "Cleaned") ? "Cleaned up leftover temp files."
-                                            : "No leftover temp files found.");
+                     strstr(rep, "Cleaned") ? "已清理残留临时文件。"
+                                            : "未发现残留临时文件。");
             free(rep);
         }
     }
@@ -2378,16 +2378,16 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
         ImVec2 hp(rcx - 110.0f - 120.0f, cy);
         dl->AddRect(hp, ImVec2(hp.x + 112, hp.y + 26), PAL.scrLine, 7.0f, 0, 1.0f);
         text_at(dl, g_ui, 12.0f, ImVec2(hp.x + 12.0f, hp.y + 7.0f), helpHov ? PAL.accentInk : PAL.scrMuted,
-                "What's this?");
+                "这是什么？");
     }
     if (helpClk) ImGui::OpenPopup("##diskhelp");
     if (ImGui::BeginPopup("##diskhelp")) {
         ImGui::PushTextWrapPos(360.0f);
         ImGui::TextUnformatted(
-            "Sequential + random 4K read/write against a temp file, reported as decimal MB/s + IOPS "
-            "(CPDT-matched). Real-Flash mode writes a RAM-sized cache-buster before each read so the "
-            "read figures reflect storage, not the OS page cache. Writes are always flushed (real). "
-            "This writes several GB temporarily and deletes it afterwards.");
+            "对临时文件执行顺序+随机4K读写测试，以十进制MB/s和IOPS报告结果"
+            "（与CPDT标准一致）。真实闪存模式会在每次读取前写入一次内存大小的缓存清除数据，"
+            "确保读取速度反映真实存储性能，而非操作系统页缓存。写入始终为真实速度（每次操作后flush）。"
+            "测试会临时写入数GB数据，完成后自动删除。");
         ImGui::PopTextWrapPos();
         ImGui::EndPopup();
     }
@@ -2483,7 +2483,7 @@ static void draw_tool_pane(ImVec2 o, float w, float h) {
 // benchmark run/sweep is in flight (fix 1): current test label, queue x/y, a
 // progress bar (g_bench_progress) and the live smoothed fps (g_bench_run_fps).
 static void draw_bench_overlay(ImDrawList *dl, ImVec2 o, float w, float h) {
-    const char *label = (g_bench_ip_row >= 0) ? g_brows[g_bench_ip_row].label : "Preparing...";
+    const char *label = (g_bench_ip_row >= 0) ? g_brows[g_bench_ip_row].label : "准备中...";
     float panelW = 380.0f;
     if (panelW > w - 28.0f) panelW = w - 28.0f;
     float panelH = 68.0f;
@@ -2492,7 +2492,7 @@ static void draw_bench_overlay(ImDrawList *dl, ImVec2 o, float w, float h) {
     dl->AddRectFilled(p, pmx, IM_COL32(6, 10, 14, 190), 10.0f);
     dl->AddRect(p, pmx, IM_COL32(255, 255, 255, 24), 10.0f, 0, 1.0f);
     // Header row: "BENCHMARKING" (left) + queue position x/y (right).
-    caps_at(dl, g_mono_sm, 9.5f, ImVec2(p.x + 14.0f, p.y + 10.0f), PAL.scrMuted, "Benchmarking", 2.0f);
+    caps_at(dl, g_mono_sm, 9.5f, ImVec2(p.x + 14.0f, p.y + 10.0f), PAL.scrMuted, "性能测试中", 2.0f);
     char qb[32];
     snprintf(qb, sizeof(qb), "%d / %d", g_bench_qn > 0 ? g_bench_qpos : 1, g_bench_qn > 0 ? g_bench_qn : 1);
     float qw = text_w(g_mono_sm, 10.0f, qb);
@@ -2623,7 +2623,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // frames, matching the emulator's Fusion HUD). The GPU-draw cost is a small
     // SECONDARY stat only, never the big number.
     ImVec2 slp(o.x + 14.0f, hp.y + pillH + 10.0f);
-    caps_at(dl, g_mono_sm, 9.5f, slp, PAL.scrMuted, "Frametime", 2.0f);
+    caps_at(dl, g_mono_sm, 9.5f, slp, PAL.scrMuted, "帧时间", 2.0f);
     ImVec2 spk(o.x + 14.0f, slp.y + 15.0f);
     draw_sparkline(dl, spk, ImVec2(200.0f, 34.0f), g_fps.ring, FpsCounter::RING_CAP, g_fps.head);
     float cur = fps > 0.0f ? 1000.0f / fps : 0.0f;
@@ -2662,9 +2662,9 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
                             ? g_vkinfo.device
                             : (g_gpu_state == TQ_DONE ? "Unknown GPU" : "Querying...");
     Cell cells[] = {
-        {"Resolution", resbuf, false},
-        {"Present", present_v, false},
-        {"Translation path", g_sel->path ? g_sel->path : "-", true},
+        {"分辨率", resbuf, false},
+        {"呈现模式", present_v, false},
+        {"转换路径", g_sel->path ? g_sel->path : "-", true},
         {"GPU", gpu_v, false},
     };
     float cx = o.x + 14.0f, cellY = mx.y - 34.0f;
@@ -2751,7 +2751,7 @@ static void draw_menu(ImDrawList *dl, ImVec2 o, float w, float h) {
     dl->AddRectFilled(o, mx, PAL.panel, 0);
     // header
     float headH = 52.0f;
-    bold_at(dl, g_ui, 13.0f, ImVec2(o.x + 15.0f, o.y + 12.0f), PAL.text, "Tests");
+    bold_at(dl, g_ui, 13.0f, ImVec2(o.x + 15.0f, o.y + 12.0f), PAL.text, "测试");
     char sub[64];
     snprintf(sub, sizeof(sub), "%d tests  -  %s", total_tests(),
              g_view_mode == 0 ? "grouped list" : "tile grid");
@@ -2842,7 +2842,7 @@ static void draw_fs_icon(ImDrawList *dl, ImVec2 c, float r, bool collapse, ImU32
 static bool fs_toggle_control(float right_x, float top_y, bool fs) {
     ImDrawList *dl = ImGui::GetWindowDrawList();
     const float H = 34.0f, PAD = 12.0f, ICON = 18.0f;
-    const char *label = fs ? "Exit Fullscreen" : nullptr;
+    const char *label = fs ? "退出全屏" : nullptr;
     float labW = label ? text_w(g_ui, 13.0f, label) : 0.0f;
     float w = label ? (14.0f + ICON + 8.0f + labW + 14.0f) : H;  // icon-only square when windowed
     ImVec2 p(right_x - PAD - w, top_y + PAD), mx(p.x + w, p.y + H);
@@ -3026,13 +3026,13 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     // embeds via its own WGL context - rather than greeting the user with the notice.
     if (g_host == HOST_GL) {
         g_sel = &kBackends[1];  // OpenGL
-        g_sel_group = "Graphics Backends";
+        g_sel_group = "图形后端";
     }
     // --hdr opens straight on the HDR test card (for a start-menu shortcut; the card
     // itself needs no arguments).
     if (g_host == HOST_D3D11 && cl && strstr(cl, "--hdr") != nullptr) {
         g_sel = &kDisplay[0];
-        g_sel_group = "Display Tests";
+        g_sel_group = "显示测试";
     }
 
     ShowWindow(hwnd, SW_SHOWDEFAULT);

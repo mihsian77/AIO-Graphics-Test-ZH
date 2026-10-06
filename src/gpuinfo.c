@@ -63,11 +63,11 @@ static void sb_appendf(StrBuf *sb, const char *fmt, ...) {
 
 static const char *vk_device_type_str(VkPhysicalDeviceType t) {
     switch (t) {
-        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: return "Integrated GPU";
-        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   return "Discrete GPU";
-        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    return "Virtual GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: return "集成GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   return "独立GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    return "虚拟GPU";
         case VK_PHYSICAL_DEVICE_TYPE_CPU:            return "CPU";
-        default:                                     return "Other";
+        default:                                     return "其他";
     }
 }
 

@@ -30,15 +30,15 @@ typedef struct {
 } SbItem;
 
 static SbItem g_items[] = {
-    {"Cube  -  Vulkan", AIO_MODE_CUBE_VK},     {"Cube  -  OpenGL", AIO_MODE_CUBE_GL},
-    {"Cube  -  DirectDraw", AIO_MODE_CUBE_DDRAW},
-    {"Cube  -  Direct3D 8", AIO_MODE_CUBE_DX8}, {"Cube  -  Direct3D 9", AIO_MODE_CUBE_DX9},
-    {"Cube  -  Direct3D 10", AIO_MODE_CUBE_DX10},
-    {"Cube  -  Direct3D 11", AIO_MODE_CUBE_DX11}, {"Cube  -  Direct3D 12", AIO_MODE_CUBE_DX12},
-    {"GPU Info", AIO_MODE_GPUINFO},
-    {"Benchmark", AIO_MODE_BENCH},             {"Semaphore Probe", AIO_MODE_SEMAPHORE},
-    {"Disk Speed", AIO_MODE_DISK},
-    {"Exit", AIO_MODE_EXIT},
+    {"立方体  -  Vulkan", AIO_MODE_CUBE_VK},     {"立方体  -  OpenGL", AIO_MODE_CUBE_GL},
+    {"立方体  -  DirectDraw", AIO_MODE_CUBE_DDRAW},
+    {"立方体  -  Direct3D 8", AIO_MODE_CUBE_DX8}, {"立方体  -  Direct3D 9", AIO_MODE_CUBE_DX9},
+    {"立方体  -  Direct3D 10", AIO_MODE_CUBE_DX10},
+    {"立方体  -  Direct3D 11", AIO_MODE_CUBE_DX11}, {"立方体  -  Direct3D 12", AIO_MODE_CUBE_DX12},
+    {"GPU信息", AIO_MODE_GPUINFO},
+    {"性能测试", AIO_MODE_BENCH},             {"信号量探测", AIO_MODE_SEMAPHORE},
+    {"磁盘速度", AIO_MODE_DISK},
+    {"退出", AIO_MODE_EXIT},
 };
 #define NITEMS ((int)(sizeof(g_items) / sizeof(g_items[0])))
 
@@ -1317,8 +1317,8 @@ static void layout_content(HWND frame) {
                    TRUE);
 }
 
-#define FOOT_A "Built with "
-#define FOOT_B " for the Emulation Community"
+#define FOOT_A "用心打造 "
+#define FOOT_B " 献给模拟器社区"
 
 // Center the footnote ("Built with [red heart] for the Emulation Community") in
 // the reserved strip at the bottom of the window.
