@@ -26,14 +26,15 @@ import struct
 import sys
 import zlib
 
-# ImGui's Ascii85 alphabet (binary_to_compressed_c.cpp / imgui_draw.cpp).
-# Standard Ascii85: '!' (0x21) through 'u' (0x75), 85 chars.
-B85_CHARS = (
-    "!\"#$%&'()*+,-./0123456789:;<=>?"
-    "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`"
-    "abcdefghijklmnopqrstu"
-)
-assert len(B85_CHARS) == 85
+# ImGui's base85 alphabet (from imgui misc/fonts/binary_to_compressed_c.cpp,
+# function Encode85Byte: x = (x % 85) + 35).
+# This is ASCII 35 ('#') through ASCII 119 ('w'), 85 consecutive chars.
+# NOT standard Ascii85 (!..u) and NOT a custom permutation. The decoder in
+# imgui_draw.cpp does (c - 35) to reverse it. Using any other alphabet produces
+# garbage after decode -> zlib uncompress out-of-bounds -> instant crash on startup.
+B85_CHARS = "".join(chr(35 + i) for i in range(85))
+assert len(B85_CHARS) == 85, f"got {len(B85_CHARS)}"
+assert B85_CHARS[0] == "#" and B85_CHARS[-1] == "w"
 
 
 def collect_chars(src_dir):
