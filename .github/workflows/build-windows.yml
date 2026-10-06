@@ -72,6 +72,7 @@ jobs:
               -DVK_USE_PLATFORM_WIN32_KHR -DWIN32_LEAN_AND_MEAN \
               -D_WIN32_WINNT=0x0A00 \
               -mno-avx -mno-avx2 \
+              -finput-charset=UTF-8 -fexec-charset=UTF-8 \
               -O2 -o $f.o
           done
 
@@ -102,6 +103,7 @@ jobs:
             -I imgui -I imgui/backends -I src \
             -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0A00 -fcf-protection=none \
             -mno-avx -mno-avx2 \
+            -finput-charset=UTF-8 -fexec-charset=UTF-8 \
             -O2 -o shell_imgui.o
           # HDR test card. Needs the Vulkan headers for its surface-format probe; that
           # probe goes through vkGetInstanceProcAddr only (VK_NO_PROTOTYPES), so this

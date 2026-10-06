@@ -2801,11 +2801,11 @@ static void draw_footer(ImDrawList *dl, ImVec2 o, float w, float h) {
     dl->AddLine(ImVec2(o.x, o.y + 0.5f), ImVec2(o.x + w, o.y + 0.5f), PAL.line, 1.0f);
     float cy = o.y + h * 0.5f;
     float x = o.x + 14.0f;
-    text_at(dl, g_ui, 11.5f, ImVec2(x, cy - 6.5f), PAL.muted, "Built with");
-    x += text_w(g_ui, 11.5f, "Built with") + 7.0f;
+    text_at(dl, g_ui, 11.5f, ImVec2(x, cy - 6.5f), PAL.muted, "用心打造");
+    x += text_w(g_ui, 11.5f, "用心打造") + 7.0f;
     heart(dl, ImVec2(x + 5.0f, cy), 4.5f, PAL.bad);
     x += 14.0f;
-    text_at(dl, g_ui, 11.5f, ImVec2(x, cy - 6.5f), PAL.muted, "for the Emulation Community");
+    text_at(dl, g_ui, 11.5f, ImVec2(x, cy - 6.5f), PAL.muted, "献给模拟器社区");
     char rbuf[48];
     snprintf(rbuf, sizeof(rbuf), "AIO Graphics Test  %s", AIO_VERSION);
     float rw = text_w(g_mono, 11.0f, rbuf);
@@ -3043,7 +3043,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = nullptr;  // do not persist layout
 
-    // Embedded fonts.
+    // Embedded fonts + Chinese font merge from system.
     ImFontConfig cfg;
     cfg.OversampleH = 3; cfg.OversampleV = 2; cfg.PixelSnapH = false;
     g_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 14.0f, &cfg);
@@ -3058,6 +3058,40 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     g_big_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 30.0f, &bigcfg);
     g_big_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 24.0f, &bigcfg);
     io.FontDefault = g_ui;
+
+    // Merge Chinese glyphs from system font into every face (Winlator/Wine has msyh.ttc).
+    // Try multiple common CJK font paths; first one that exists wins.
+    static const char *cn_font_paths[] = {
+        "C:\\Windows\\Fonts\\msyh.ttc",      // 微软雅黑 (Win10/11 default)
+        "C:\\Windows\\Fonts\\msyhbd.ttc",    // 微软雅黑粗体
+        "C:\\Windows\\Fonts\\simhei.ttf",    // 黑体
+        "C:\\Windows\\Fonts\\simsun.ttc",    // 宋体
+        "C:\\Windows\\Fonts\\Deng.ttf",      // 等线
+        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",  // Linux fallback
+        nullptr
+    };
+    const char *cn_font = nullptr;
+    for (int i = 0; cn_font_paths[i]; ++i) {
+        FILE *fp = fopen(cn_font_paths[i], "rb");
+        if (fp) { fclose(fp); cn_font = cn_font_paths[i]; break; }
+    }
+    if (cn_font) {
+        const ImWchar *cn_ranges = io.Fonts->GetGlyphRangesChineseSimplifiedCommon();
+        struct { ImFont **face; float size; } faces[] = {
+            {&g_ui, 14.0f}, {&g_ui_big, 19.0f}, {&g_mono, 12.0f},
+            {&g_mono_sm, 10.0f}, {&g_mono_bg, 20.0f},
+            {&g_big_ui, 30.0f}, {&g_big_mono, 24.0f},
+        };
+        for (auto &f : faces) {
+            ImFontConfig mcfg;
+            mcfg.MergeMode = true;
+            mcfg.OversampleH = 2; mcfg.OversampleV = 1;
+            io.Fonts->AddFontFromFileTTF(cn_font, f.size, &mcfg, cn_ranges);
+        }
+        { char m[128]; snprintf(m, sizeof(m), "Chinese font merged: %s", cn_font); aio_diag_log(m); }
+    } else {
+        aio_diag_log("WARNING: no CJK font found, Chinese text will show as boxes");
+    }
     aio_diag_log("ImGui context + fonts loaded");
 
     init_hues();
