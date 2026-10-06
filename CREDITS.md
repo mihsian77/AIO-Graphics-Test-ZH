@@ -21,6 +21,13 @@ DirectX SDK sample *data* (meshes, textures, caustics) — see the dedicated sec
   Licensed under **Apache-2.0** (see the header in `src/cube.c` and `LICENSE`).
   https://github.com/KhronosGroup/Vulkan-Tools
 
+- **Noto Sans CJK SC** — the embedded CJK font (`src/font_cjk.inc`) is a subset of
+  Noto Sans CJK SC Regular, subsetted to the ~316 characters used by the Chinese UI
+  (`tools/gen_cjk_font.py`). © Google Inc., licensed under the **SIL Open Font License 1.1**
+  (OFL-1.1). The subset is embedded as zlib-compressed base85 so the binary has no runtime
+  dependency on system CJK fonts (which a pristine Wine/Winlator prefix lacks).
+  https://github.com/notofonts/noto-cjk
+
 ## Build-time dependencies (fetched in CI, not vendored)
 
 - **Vulkan-Headers**, **Vulkan-Loader** — © The Khronos Group, Apache-2.0.

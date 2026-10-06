@@ -55,13 +55,16 @@ jobs:
           # Phase 4: the Vulkan embed cube's own solid-color shaders (aio_vk_embed_*).
           glslangValidator -V -x -o src/embed_cube.vert.inc src/embed_cube.vert
           glslangValidator -V -x -o src/embed_cube.frag.inc src/embed_cube.frag
+          # src/font_cjk.inc is checked in (Noto Sans CJK SC subset, TrueType
+          #轮廓, zlib+base85). Regenerate with: python3 tools/gen_cjk_font.py
+          # (requires a TTC with TrueType outlines, e.g. NotoSansCJK-Regular.ttc).
 
       - name: Compile resources (app icon)
         run: ${{ matrix.prefix }}-windres -I src src/app.rc -o app_res.o
 
       - name: Compile objects
         run: |
-          for f in cube gpuinfo menu bench hud disk cube_gl cube_d3d11 cube_d3d12 \
+          for f in cube gpuinfo cpuinfo menu bench hud disk cube_gl cube_d3d11 cube_d3d12 \
                    cube_d3d10 cube_d3d9 cube_d3d8 cube_ddraw watchdog; do
             # -mno-avx/-mno-avx2: the container's FEX/arm64ec x86 JIT can't execute
             # AVX; GCC otherwise emits AVX in the auto-vectorized/CRT-init paths,
@@ -150,7 +153,7 @@ jobs:
           # (core Wine DLLs) are the only extra static imports, pulled in by ImGui's
           # Win32 backend.
           ${{ matrix.prefix }}-g++ \
-            cube.o gpuinfo.o menu.o bench.o hud.o disk.o cube_gl.o cube_d3d11.o cube_d3d12.o \
+            cube.o gpuinfo.o cpuinfo.o menu.o bench.o hud.o disk.o cube_gl.o cube_d3d11.o cube_d3d12.o \
             cube_d3d10.o cube_d3d9.o cube_d3d8.o cube_ddraw.o watchdog.o app_res.o \
             imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o \
             imgui_impl_dx11.o imgui_impl_opengl3.o imgui_impl_win32.o shell_imgui.o hdr_scene.o \

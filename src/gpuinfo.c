@@ -320,6 +320,44 @@ void aio_gpuinfo_query_vk(AioVkInfo *out) {
     VkPhysicalDeviceProperties p;
     vkGetPhysicalDeviceProperties(gpus[sel], &p);
     snprintf(out->device, sizeof(out->device), "%s", p.deviceName);
+
+    // ---- Post-process the device name for Winlator / Turnip / llvmpipe ----
+    // DXVK + Turnip exposes the Vulkan device as "Turnip Adreno (TM) 740" or
+    // "Qualcomm Adreno (TM) 740"; llvmpipe exposes "llvmpipe (LLVM 17.0.6,
+    // 256 bits)". We normalise these so the UI shows a clean, recognisable name
+    // and flags software rendering so the caller can warn the user.
+    {
+        const char *d = out->device;
+        // Software renderers: llvmpipe, softpipe, lavapipe, swrast.
+        if (strstr(d, "llvmpipe") || strstr(d, "softpipe") ||
+            strstr(d, "lavapipe") || strstr(d, "swrast")) {
+            out->software = 1;
+        }
+        // Turnip: strip the "Turnip " / "Qualcomm " prefix and "(TM)" noise,
+        // keep "Adreno 740". Also handle "Adreno (TM) 740" -> "Adreno 740".
+        if (strstr(d, "Adreno") || strstr(d, "adreno")) {
+            char clean[256];
+            const char *a = strstr(d, "dreno");  // points to "dreno" in "Adreno"
+            if (a) {
+                a -= 2;  // back up to "Adreno" (A-d-r-e-n-o)
+                snprintf(clean, sizeof(clean), "%s", a);
+                // Remove "(TM)" if present.
+                char *tm = strstr(clean, "(TM)");
+                if (tm) {
+                    // Shift everything after "(TM) " left by 5 chars.
+                    size_t off = tm - clean;
+                    size_t rest = strlen(tm + 5);
+                    memmove(tm, tm + 5, rest + 1);
+                    (void)off;
+                }
+                // Trim trailing spaces.
+                size_t L = strlen(clean);
+                while (L > 0 && clean[L - 1] == ' ') clean[--L] = '\0';
+                snprintf(out->device, sizeof(out->device), "%s", clean);
+            }
+        }
+    }
+
     snprintf(out->api, sizeof(out->api), "%u.%u.%u", VK_API_VERSION_MAJOR(p.apiVersion),
              VK_API_VERSION_MINOR(p.apiVersion), VK_API_VERSION_PATCH(p.apiVersion));
     snprintf(out->driver, sizeof(out->driver), "%u.%u.%u", VK_API_VERSION_MAJOR(p.driverVersion),

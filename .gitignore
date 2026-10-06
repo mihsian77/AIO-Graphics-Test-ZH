@@ -4,6 +4,7 @@ src/cube.frag.inc
 # Build output
 *.exe
 *.o
+*.zip
 build/
 vk/
 vh/

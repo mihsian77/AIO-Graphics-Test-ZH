@@ -17,7 +17,8 @@ char *aio_gpuinfo_build_vk_text(void);
 // ---------------------------------------------------------------------------
 typedef struct {
     int ok;             // 1 = a Vulkan physical device was enumerated
-    char device[256];   // VkPhysicalDeviceProperties.deviceName
+    int software;       // 1 = llvmpipe / softpipe / lavapipe (no real GPU)
+    char device[256];   // VkPhysicalDeviceProperties.deviceName (cleaned)
     char driver[96];    // decoded driverVersion (x.y.z)
     char api[32];       // apiVersion "major.minor.patch"
     char vendor[64];    // "Qualcomm (0x5143)" etc.
