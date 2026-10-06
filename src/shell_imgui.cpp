@@ -2655,11 +2655,17 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     const char *present_v =
         g_scene_live ? (g_present_vsync ? "FIFO (vsync)" : "Uncapped (0)")
                      : (g_sel->present ? g_sel->present : "FIFO (vsync off)");
+    // GPU name: read from the real Vulkan physical device (queried on a background
+    // thread at startup). Falls back to "Querying..." until the thread publishes,
+    // or "Unknown GPU" if enumeration failed. Never hardcode a specific chip.
+    const char *gpu_v = (g_gpu_state == TQ_DONE && g_vkinfo.ok && g_vkinfo.device[0])
+                            ? g_vkinfo.device
+                            : (g_gpu_state == TQ_DONE ? "Unknown GPU" : "Querying...");
     Cell cells[] = {
         {"Resolution", resbuf, false},
         {"Present", present_v, false},
         {"Translation path", g_sel->path ? g_sel->path : "-", true},
-        {"GPU", "Adreno 750", false},
+        {"GPU", gpu_v, false},
     };
     float cx = o.x + 14.0f, cellY = mx.y - 34.0f;
     for (int i = 0; i < 4; ++i) {
