@@ -466,6 +466,21 @@ static void destroy_device() {
 static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp)) return 1;
     switch (msg) {
+        case WM_NCHITTEST: {
+            // Let the OS do resize-border detection first, then upgrade the top
+            // title-bar strip (minus the window buttons on the right) to
+            // HTCAPTION so native dragging works under Wine/WS_POPUP.
+            LRESULT hit = DefWindowProc(hwnd, msg, wp, lp);
+            if (hit == HTCLIENT && g_is_wine) {
+                POINT pt = { GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
+                ScreenToClient(hwnd, &pt);
+                RECT rc; GetClientRect(hwnd, &rc);
+                // Title bar strip: top 44px. Skip rightmost ~140px (buttons).
+                if (pt.y >= 0 && pt.y < 44 && pt.x < rc.right - 140)
+                    return HTCAPTION;
+            }
+            return hit;
+        }
         case WM_SIZE:
             // Defer to the main loop (coalesce multiple messages / modal-drag steps).
             // Recorded for either host; the loop applies a D3D11 ResizeBuffers or a
@@ -1312,11 +1327,26 @@ static float text_w(ImFont *f, float sz, const char *s) {
 static float caps_at(ImDrawList *dl, ImFont *f, float sz, ImVec2 p, ImU32 col, const char *s,
                      float spacing) {
     float x = p.x;
-    for (const char *c = s; *c; ++c) {
-        char up = (*c >= 'a' && *c <= 'z') ? (char)(*c - 32) : *c;
-        char b[2] = {up, 0};
+    // Walk UTF-8 codepoints (not bytes): ASCII gets uppercase + letter-spacing,
+    // multi-byte CJK chars are emitted whole (one AddText per codepoint).
+    while (*s) {
+        unsigned char ch = (unsigned char)*s;
+        int clen = 1;
+        if (ch >= 0xF0) clen = 4;
+        else if (ch >= 0xE0) clen = 3;
+        else if (ch >= 0xC0) clen = 2;
+        // Emit this codepoint as a null-terminated slice.
+        char b[8];
+        if (clen == 1) {
+            b[0] = (ch >= 'a' && ch <= 'z') ? (char)(ch - 32) : (char)ch;
+            b[1] = 0;
+        } else {
+            for (int i = 0; i < clen; i++) b[i] = s[i];
+            b[clen] = 0;
+        }
         dl->AddText(f, sz, ImVec2(x, p.y), col, b);
         x += f->CalcTextSizeA(sz, FLT_MAX, 0.0f, b).x + spacing;
+        s += clen;
     }
     return x - p.x - spacing;
 }
