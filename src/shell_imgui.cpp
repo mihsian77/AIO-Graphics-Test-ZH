@@ -1542,7 +1542,7 @@ static void draw_toolbar(ImDrawList *dl, ImVec2 o, float w, float h) {
     float presW = 138.0f;
     float px = rx - gap - presW;
     char plabel[28];
-    snprintf(plabel, sizeof(plabel), "Present  %s", g_present_vsync ? "Vsync" : "Uncapped");
+    snprintf(plabel, sizeof(plabel), "显示  %s", g_present_vsync ? "垂直同步" : "不限制");
     if (chrome_button("##present", ImVec2(px, cy - segH * 0.5f), ImVec2(presW, segH), plabel, false))
         g_present_vsync = !g_present_vsync;
 
@@ -2149,7 +2149,7 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
             dp_row(dl, cx, ry, colW, "最大纹理", g_glinfo.max_texture, PAL.scrText, z++ & 1); ry += 24;
             dp_row(dl, cx, ry, colW, "MSAA采样", g_glinfo.max_samples, PAL.scrText, z++ & 1); ry += 24;
         } else {
-            dp_row(dl, cx, ry, colW, "OpenGL", "no GL context", PAL.bad, false);
+            dp_row(dl, cx, ry, colW, "OpenGL", "无法创建 GL 上下文", PAL.bad, false);
         }
     }
     ImGui::Dummy(ImVec2(availW, cardY - base.y + 38.0f + 14 * 24.0f + 20.0f));
@@ -2287,7 +2287,7 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
     }
     bx += 6.0f;
     if (screen_button("##bvsync", ImVec2(bx, cy), ImVec2(96, 26),
-                      g_bench_vsync ? "Vsync: On" : "Vsync: Off", g_bench_vsync, !busy) && !busy)
+                      g_bench_vsync ? "垂直同步：开" : "垂直同步：关", g_bench_vsync, !busy) && !busy)
         g_bench_vsync = !g_bench_vsync;
 
     // Controls row 2: Select All / Clear All / Run Selected / Run All.
@@ -2376,7 +2376,7 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
         // Run button
         char rid[16]; snprintf(rid, sizeof(rid), "##run%d", i);
         if (screen_button(rid, ImVec2(rx0 + availW - runW, ry + 2.0f), ImVec2(runW, 24.0f),
-                          r.state != 0 ? "..." : "Run", false, !busy && avail) && !busy && avail)
+                          r.state != 0 ? "..." : "运行", false, !busy && avail) && !busy && avail)
             bench_enqueue(i);
         ry += ROWH;
     }
@@ -2412,7 +2412,7 @@ static void draw_disk_history(ImVec2 base, float w, float h) {
     float rx = lb.x + pad, ry = lb.y + 4.0f;
     if (g_dhist_n == 0) {
         text_at(ldl, g_mono, 12.0f, ImVec2(rx, ry + 4.0f), PAL.scrMuted,
-                "No past disk runs yet. Run a test on the Live tab to record one.");
+                "暂无历史磁盘测试记录。运行一次测试后将自动记录。");
         ImGui::Dummy(ImVec2(availW, 40.0f));
         ImGui::EndChild();
         return;
@@ -2676,8 +2676,8 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
             aio_hdr_draw_ui(dl, o, w, h, fps, full, &f);
         } else {
             dl->AddRectFilledMultiColor(o, mx, PAL.scr2, PAL.scr2, PAL.scr, PAL.scr);
-            const char *line1 = (g_host == HOST_GL) ? "Needs Direct3D 11 (unavailable on this device)"
-                                                    : "HDR test waits for the benchmark to finish";
+            const char *line1 = (g_host == HOST_GL) ? "需要 Direct3D 11（当前设备不支持）"
+                                                    : "HDR 测试需等待基准测试完成";
             float tw = text_w(g_ui_big, 22.0f, line1);
             text_at(dl, g_ui_big, 22.0f, ImVec2(o.x + (w - tw) * 0.5f, o.y + h * 0.5f - 30.0f), PAL.scrText,
                     line1);
@@ -2726,11 +2726,11 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // scenes and the offscreen DX11 path require the D3D11 device, which isn't
     // available in GL mode. Show an inline notice instead of rendering (never crash).
     if (g_needs_d3d11) {
-        const char *line1 = "Needs Direct3D 11 (unavailable on this device)";
+        const char *line1 = "需要 Direct3D 11（当前设备不支持）";
         float tw = text_w(g_ui_big, 22.0f, line1);
         text_at(dl, g_ui_big, 22.0f, ImVec2(o.x + (w - tw) * 0.5f, o.y + h * 0.5f - 30.0f),
                 PAL.text, line1);
-        const char *sub = "try the OpenGL / Vulkan tests";
+        const char *sub = "试试 OpenGL / Vulkan 测试";
         float sw = text_w(g_mono, 12.0f, sub);
         text_at(dl, g_mono, 12.0f, ImVec2(o.x + (w - sw) * 0.5f, o.y + h * 0.5f + 6.0f),
                 PAL.muted, sub);
@@ -2745,7 +2745,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
         float tw = text_w(g_ui_big, 22.0f, line1);
         text_at(dl, g_ui_big, 22.0f, ImVec2(o.x + (w - tw) * 0.5f, o.y + h * 0.5f - 30.0f),
                 PAL.text, line1);  // theme-aware (empty backdrop follows theme)
-        const char *sub = "the DXVK / VKD3D / driver for this API isn't present";
+        const char *sub = "缺少此 API 的驱动（DXVK / VKD3D 等）";
         float sw = text_w(g_mono, 12.0f, sub);
         text_at(dl, g_mono, 12.0f, ImVec2(o.x + (w - sw) * 0.5f, o.y + h * 0.5f + 6.0f),
                 PAL.muted, sub);
@@ -2805,7 +2805,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
         snprintf(resbuf, sizeof(resbuf), "%d x %d", (int)w, (int)h);
     // Present reflects the live shell present-mode toggle when a scene is embedded.
     const char *present_v =
-        g_scene_live ? (g_present_vsync ? "FIFO (vsync)" : "Uncapped (0)")
+        g_scene_live ? (g_present_vsync ? "FIFO（垂直同步）" : "不限制（0）")
                      : (g_sel->present ? g_sel->present : "FIFO (vsync off)");
     // GPU name: real Vulkan physical device (background thread). With an 8 s
     // timeout: if vkCreateInstance wedges (broken DXVK / no ICD) we don't sit on
@@ -2836,7 +2836,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
             gpu_v = "GPU 超时";
         }
     } else {
-        gpu_v = "Querying...";
+        gpu_v = "查询中...";
     }
 
     // CPU: model + core count. Trim long brand strings (some Intel/AMD names are
@@ -2951,8 +2951,8 @@ static void draw_menu(ImDrawList *dl, ImVec2 o, float w, float h) {
     float headH = 84.0f;
     bold_at(dl, g_ui, 13.0f, ImVec2(o.x + 15.0f, o.y + 12.0f), PAL.text, "测试");
     char sub[64];
-    snprintf(sub, sizeof(sub), "%d tests  -  %s", total_tests(),
-             g_view_mode == 0 ? "grouped list" : "tile grid");
+    snprintf(sub, sizeof(sub), "%d 项测试  -  %s", total_tests(),
+             g_view_mode == 0 ? "分组列表" : "网格视图");
     text_at(dl, g_mono, 11.0f, ImVec2(o.x + 15.0f, o.y + 30.0f), PAL.muted, sub);
     // search box (filters by test name or API, case-insensitive)
     ImGui::SetCursorScreenPos(ImVec2(o.x + 10.0f, o.y + 48.0f));
