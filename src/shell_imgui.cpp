@@ -3214,8 +3214,8 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
         RECT wa;
         if (SystemParametersInfoA(SPI_GETWORKAREA, 0, &wa, 0)) {
             int sw = wa.right - wa.left, sh = wa.bottom - wa.top;
-            win_w = min(win_w, (int)(sw * 0.85f));
-            win_h = min(win_h, (int)(sh * 0.85f));
+            win_w = std::min(win_w, (int)(sw * 0.85f));
+            win_h = std::min(win_h, (int)(sh * 0.85f));
             win_x = wa.left + (sw - win_w) / 2;
             win_y = wa.top + (sh - win_h) / 2;
         }
