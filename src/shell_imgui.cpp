@@ -2614,7 +2614,7 @@ static void draw_bench_overlay(ImDrawList *dl, ImVec2 o, float w, float h) {
     dl->AddRectFilled(p, pmx, IM_COL32(6, 10, 14, 190), 10.0f);
     dl->AddRect(p, pmx, IM_COL32(255, 255, 255, 24), 10.0f, 0, 1.0f);
     // Header row: "BENCHMARKING" (left) + queue position x/y (right).
-    caps_at(dl, g_mono_sm, 9.5f, ImVec2(p.x + 14.0f, p.y + 10.0f), PAL.scrMuted, "性能测试中", 2.0f);
+    caps_at(dl, g_mono, 9.5f, ImVec2(p.x + 14.0f, p.y + 10.0f), PAL.scrMuted, "性能测试中", 2.0f);
     char qb[32];
     snprintf(qb, sizeof(qb), "%d / %d", g_bench_qn > 0 ? g_bench_qpos : 1, g_bench_qn > 0 ? g_bench_qn : 1);
     float qw = text_w(g_mono_sm, 10.0f, qb);
@@ -2745,7 +2745,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // frames, matching the emulator's Fusion HUD). The GPU-draw cost is a small
     // SECONDARY stat only, never the big number.
     ImVec2 slp(o.x + 14.0f, hp.y + pillH + 10.0f);
-    caps_at(dl, g_mono_sm, 9.5f, slp, PAL.scrMuted, "帧时间", 2.0f);
+    caps_at(dl, g_mono, 9.5f, slp, PAL.scrMuted, "帧时间", 2.0f);
     ImVec2 spk(o.x + 14.0f, slp.y + 15.0f);
     draw_sparkline(dl, spk, ImVec2(200.0f, 34.0f), g_fps.ring, FpsCounter::RING_CAP, g_fps.head);
     float cur = fps > 0.0f ? 1000.0f / fps : 0.0f;
@@ -2833,13 +2833,13 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     };
     float cx = o.x + 14.0f, cellY = mx.y - 34.0f;
     for (int i = 0; i < 5; ++i) {
-        caps_at(dl, g_mono_sm, 9.0f, ImVec2(cx, cellY), PAL.scrMuted, cells[i].k, 1.5f);
+        caps_at(dl, g_mono, 9.0f, ImVec2(cx, cellY), PAL.scrMuted, cells[i].k, 1.5f);
         ImU32 vc;
         if (cells[i].path) vc = PAL.accentInk;
         else if (i == 3 && gpu_software) vc = PAL.bad;  // red for llvmpipe
         else vc = PAL.scrText;
         text_at(dl, g_mono, 12.0f, ImVec2(cx, cellY + 13.0f), vc, cells[i].v);
-        float kw = caps_at(dl, g_mono_sm, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
+        float kw = caps_at(dl, g_mono, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
         float vw = text_w(g_mono, 12.0f, cells[i].v);
         float cw = (kw > vw ? kw : vw);
         cx += cw + 22.0f;
@@ -2969,7 +2969,7 @@ static void draw_menu(ImDrawList *dl, ImVec2 o, float w, float h) {
         // group header: caps + divider line
         ImGui::Dummy(ImVec2(0, g == 0 ? 2.0f : 10.0f));
         ImVec2 hp = ImGui::GetCursorScreenPos();
-        float hw = caps_at(cdl, g_mono_sm, 9.5f, ImVec2(hp.x + 6.0f, hp.y + 4.0f), PAL.faint,
+        float hw = caps_at(cdl, g_mono, 9.5f, ImVec2(hp.x + 6.0f, hp.y + 4.0f), PAL.faint,
                            grp.name, 1.8f);
         cdl->AddLine(ImVec2(hp.x + 6.0f + hw + 8.0f, hp.y + 8.0f),
                      ImVec2(hp.x + avail - 4.0f, hp.y + 8.0f), PAL.line, 1.0f);
@@ -3333,7 +3333,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     // which makes 14px text render ~10.5px and blurry after bilinear scaling.
     // Bump the global font scale under Wine so text stays legible; native Windows
     // uses 1.0 (its DPI handling is correct).
-    io.FontGlobalScale = g_is_wine ? 1.25f : 1.0f;
+    io.FontGlobalScale = g_is_wine ? 1.5f : 1.0f;
     { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
 
