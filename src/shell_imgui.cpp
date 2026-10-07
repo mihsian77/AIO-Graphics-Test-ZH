@@ -472,7 +472,7 @@ static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // HTCAPTION so native dragging works under Wine/WS_POPUP.
             LRESULT hit = DefWindowProc(hwnd, msg, wp, lp);
             if (hit == HTCLIENT && g_is_wine) {
-                POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+                POINT pt = { LOWORD(lp), HIWORD(lp) };
                 ScreenToClient(hwnd, &pt);
                 RECT rc; GetClientRect(hwnd, &rc);
                 // Title bar strip: top 44px. Skip rightmost ~140px (buttons).
