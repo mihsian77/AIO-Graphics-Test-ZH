@@ -235,6 +235,11 @@ static ID3D11RenderTargetView *g_rtv = nullptr;
 static HWND g_shell_hwnd = nullptr;
 static bool g_is_wine = false;
 
+// Manual window drag (WM_NCLBUTTONDOWN+HTCAPTION is unreliable under Wine/WS_POPUP).
+static bool  g_win_dragging = false;
+static POINT g_win_drag_mouse = {0, 0};
+static RECT  g_win_drag_rect = {0, 0, 0, 0};
+
 static bool detect_wine(void) {
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
     return ntdll && GetProcAddress(ntdll, "wine_get_version") != NULL;
@@ -1390,10 +1395,11 @@ static void draw_titlebar(ImDrawList *dl, ImVec2 o, float w, float h) {
     float nx = o.x + 38.0f + text_w(g_ui, 14.0f, "AIO Graphics Test") + 10.0f;
     text_at(dl, g_mono, 11.0f, ImVec2(nx, cy - 6.0f), PAL.muted, AIO_VERSION);
 
-    // ---- Drag-to-move region (title bar空白 area, before the window buttons) ----
-    // A caption-less window can't be dragged by its native title bar, so we catch
-    // left-button down on this strip and hand it to Windows as an HTCAPTION drag.
-    // Double-click toggles maximise (standard caption behaviour).
+    // ---- Drag-to-move region (title bar blank area, before the window buttons) ----
+    // A caption-less window can't be dragged by its native title bar. WM_NCLBUTTONDOWN
+    // + HTCAPTION is unreliable under Wine/WS_POPUP, so we do a manual drag: record
+    // the window rect + mouse pos on click, then move the window by the delta each
+    // frame while the button stays down. Double-click toggles maximise.
     if (g_shell_hwnd) {
         const float btnW = 46.0f;
         float dragX = nx + text_w(g_mono, 11.0f, AIO_VERSION) + 14.0f;
@@ -1405,11 +1411,26 @@ static void draw_titlebar(ImDrawList *dl, ImVec2 o, float w, float h) {
             bool dbl = ImGui::IsMouseDoubleClicked(0);
             ImGui::PopID();
             if (clk && ImGui::IsMouseClicked(0)) {
-                ReleaseCapture();
-                SendMessage(g_shell_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                g_win_dragging = true;
+                GetCursorPos(&g_win_drag_mouse);
+                GetWindowRect(g_shell_hwnd, &g_win_drag_rect);
             } else if (dbl && ImGui::IsItemHovered()) {
                 ShowWindow(g_shell_hwnd, IsZoomed(g_shell_hwnd) ? SW_RESTORE : SW_MAXIMIZE);
             }
+        }
+    }
+    // Apply manual drag each frame while left button is held.
+    if (g_win_dragging) {
+        if (GetAsyncKeyState(VK_LBUTTON) >= 0) {
+            g_win_dragging = false;
+        } else {
+            POINT cur;
+            GetCursorPos(&cur);
+            int dx = cur.x - g_win_drag_mouse.x;
+            int dy = cur.y - g_win_drag_mouse.y;
+            SetWindowPos(g_shell_hwnd, nullptr,
+                         g_win_drag_rect.left + dx, g_win_drag_rect.top + dy,
+                         0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
     }
 
@@ -2893,26 +2914,58 @@ static void menu_tile(const Test *t, const char *group, float x, float y, float 
 }
 
 static void draw_menu(ImDrawList *dl, ImVec2 o, float w, float h) {
+    static char filter_buf[64] = "";
     ImVec2 mx(o.x + w, o.y + h);
     dl->AddRectFilled(o, mx, PAL.panel, 0);
-    // header
-    float headH = 52.0f;
+    // header (taller to fit the search box)
+    float headH = 84.0f;
     bold_at(dl, g_ui, 13.0f, ImVec2(o.x + 15.0f, o.y + 12.0f), PAL.text, "测试");
     char sub[64];
     snprintf(sub, sizeof(sub), "%d tests  -  %s", total_tests(),
              g_view_mode == 0 ? "grouped list" : "tile grid");
     text_at(dl, g_mono, 11.0f, ImVec2(o.x + 15.0f, o.y + 30.0f), PAL.muted, sub);
+    // search box (filters by test name or API, case-insensitive)
+    ImGui::SetCursorScreenPos(ImVec2(o.x + 10.0f, o.y + 48.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+    ImGui::PushItemWidth(w - 20.0f);
+    ImGui::InputTextWithHint("##menufilter", "搜索测试项...", filter_buf, sizeof(filter_buf));
+    ImGui::PopItemWidth();
+    ImGui::PopStyleVar();
     dl->AddLine(ImVec2(o.x, o.y + headH - 0.5f), ImVec2(mx.x, o.y + headH - 0.5f), PAL.line, 1.0f);
 
-    // scroll region
+    // helper: case-insensitive substring match
+    auto match_filter = [](const char *s) -> bool {
+        if (!filter_buf[0]) return true;
+        for (const char *p = s; *p; ++p) {
+            bool ok = true;
+            for (int i = 0; filter_buf[i]; ++i) {
+                char a = (char)tolower((unsigned char)p[i]);
+                char b = (char)tolower((unsigned char)filter_buf[i]);
+                if (!p[i] || a != b) { ok = false; break; }
+            }
+            if (ok) return true;
+        }
+        return false;
+    };
+
+    // scroll region (wider scrollbar for easier touch / grab)
     ImGui::SetCursorScreenPos(ImVec2(o.x, o.y + headH));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 14.0f);
     ImGui::BeginChild("##menuscroll", ImVec2(w, h - headH), false,
                       ImGuiWindowFlags_NoBackground);
     ImDrawList *cdl = ImGui::GetWindowDrawList();
     float avail = ImGui::GetContentRegionAvail().x;
     for (int g = 0; g < kGroupCount; ++g) {
         const Group &grp = kGroups[g];
+        // skip groups with zero matches when filtering
+        if (filter_buf[0]) {
+            bool any = false;
+            for (int i = 0; i < grp.n; ++i)
+                if (match_filter(grp.items[i].name) || match_filter(grp.items[i].api))
+                    { any = true; break; }
+            if (!any) continue;
+        }
         // group header: caps + divider line
         ImGui::Dummy(ImVec2(0, g == 0 ? 2.0f : 10.0f));
         ImVec2 hp = ImGui::GetCursorScreenPos();
@@ -2923,11 +2976,21 @@ static void draw_menu(ImDrawList *dl, ImVec2 o, float w, float h) {
         ImGui::Dummy(ImVec2(avail, 20.0f));
 
         if (g_view_mode == 0) {
-            for (int i = 0; i < grp.n; ++i) menu_row(&grp.items[i], grp.name, avail);
+            for (int i = 0; i < grp.n; ++i) {
+                if (filter_buf[0] && !match_filter(grp.items[i].name) && !match_filter(grp.items[i].api))
+                    continue;
+                menu_row(&grp.items[i], grp.name, avail);
+            }
         } else {
             float gap = 8.0f, cw = (avail - gap - 12.0f) / 2.0f, ch = 50.0f;
             float x0 = ImGui::GetCursorScreenPos().x + 6.0f;
             for (int i = 0; i < grp.n; i += 2) {
+                // skip row if both tiles are filtered out
+                if (filter_buf[0]) {
+                    bool m0 = match_filter(grp.items[i].name) || match_filter(grp.items[i].api);
+                    bool m1 = (i + 1 < grp.n) && (match_filter(grp.items[i+1].name) || match_filter(grp.items[i+1].api));
+                    if (!m0 && !m1) continue;
+                }
                 float y = ImGui::GetCursorScreenPos().y;
                 menu_tile(&grp.items[i], grp.name, x0, y, cw, ch);
                 if (i + 1 < grp.n)
@@ -2939,7 +3002,7 @@ static void draw_menu(ImDrawList *dl, ImVec2 o, float w, float h) {
     }
     ImGui::Dummy(ImVec2(0, 8.0f));
     ImGui::EndChild();
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
 }
 
 static void draw_footer(ImDrawList *dl, ImVec2 o, float w, float h) {
@@ -3107,6 +3170,17 @@ static void aio_hud_write_status(const Test *t) {
 // ===========================================================================
 extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     aio_diag_log("aio_run_imgui_shell: entry");
+    // Per-monitor DPI awareness: stops the system from bitmap-stretching the
+    // window on high-DPI displays (keeps text / lines crisp). Best-effort;
+    // older Windows / Wine may not export these entry points.
+    {
+        HMODULE u32 = GetModuleHandleA("user32.dll");
+        if (u32) {
+            typedef BOOL(WINAPI *SetProcessDPIAware_t)(void);
+            SetProcessDPIAware_t fn = (SetProcessDPIAware_t)GetProcAddress(u32, "SetProcessDPIAware");
+            if (fn) fn();
+        }
+    }
     WNDCLASSEXA wc;
     ZeroMemory(&wc, sizeof(wc));
     wc.cbSize = sizeof(wc);
@@ -3132,10 +3206,24 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     } else {
         win_style = WS_OVERLAPPEDWINDOW & ~WS_CAPTION;
     }
+    // Centre the window and cap its size to ~85% of the work area so it never
+    // spawns off-screen or oversized on small phone / container resolutions.
+    int win_w = 1180, win_h = 720;
+    int win_x = 100, win_y = 100;
+    {
+        RECT wa;
+        if (SystemParametersInfoA(SPI_GETWORKAREA, 0, &wa, 0)) {
+            int sw = wa.right - wa.left, sh = wa.bottom - wa.top;
+            win_w = min(win_w, (int)(sw * 0.85f));
+            win_h = min(win_h, (int)(sh * 0.85f));
+            win_x = wa.left + (sw - win_w) / 2;
+            win_y = wa.top + (sh - win_h) / 2;
+        }
+    }
     HWND hwnd = CreateWindowExA(g_is_wine ? WS_EX_APPWINDOW : 0,
                                  wc.lpszClassName, "",
-                                 win_style, 100, 100,
-                                 1180, 720, nullptr, nullptr, hInstance, nullptr);
+                                 win_style, win_x, win_y,
+                                 win_w, win_h, nullptr, nullptr, hInstance, nullptr);
     if (!hwnd) {
         aio_diag_log("aio_run_imgui_shell: CreateWindow FAILED");
         UnregisterClassA(wc.lpszClassName, hInstance);
@@ -3234,12 +3322,19 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
         for (auto &f : faces) {
             ImFontConfig mcfg;
             mcfg.MergeMode = true;
+            mcfg.DstFont = *f.face;  // merge into THIS face, not Fonts.back()
             mcfg.OversampleH = 2; mcfg.OversampleV = 1;
             io.Fonts->AddFontFromMemoryCompressedBase85TTF(
                 CJKFont_compressed_data_base85, f.size, &mcfg, cn_ranges);
         }
         aio_diag_log("Chinese font merged: embedded Noto Sans CJK SC subset (316 glyphs)");
     }
+    // Font scaling: Winlator downscales the window (e.g. 1280 -> 960 logical),
+    // which makes 14px text render ~10.5px and blurry after bilinear scaling.
+    // Bump the global font scale under Wine so text stays legible; native Windows
+    // uses 1.0 (its DPI handling is correct).
+    io.FontGlobalScale = g_is_wine ? 1.25f : 1.0f;
+    { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
 
     // CPU / memory info: synchronous registry + system API read (<1 ms).
