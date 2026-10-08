@@ -2112,14 +2112,14 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
             dp_row(dl, cx, ry, colW, "类型", g_vkinfo.type, PAL.scrText, z++ & 1); ry += 24;
             dp_row(dl, cx, ry, colW, "显存", g_vkinfo.memory, PAL.scrText, z++ & 1); ry += 24;
             struct { const char *k; int v; } fr[] = {
-                {"geometryShader", g_vkinfo.f_geometry},
-                {"tessellationShader", g_vkinfo.f_tessellation},
-                {"samplerAnisotropy", g_vkinfo.f_samplerAniso},
-                {"multiDrawIndirect", g_vkinfo.f_multiDrawIndirect},
-                {"shaderInt64", g_vkinfo.f_shaderInt64},
-                {"textureCompressionBC", g_vkinfo.f_textureBC},
-                {"sparseBinding", g_vkinfo.f_sparseBinding},
-                {"fragmentStoresAndAtomics", g_vkinfo.f_fragStoresAtomics},
+                {"geometryShader（几何着色器）", g_vkinfo.f_geometry},
+                {"tessellationShader（曲面细分）", g_vkinfo.f_tessellation},
+                {"samplerAnisotropy（各向异性过滤）", g_vkinfo.f_samplerAniso},
+                {"multiDrawIndirect（间接绘制）", g_vkinfo.f_multiDrawIndirect},
+                {"shaderInt64（64位着色器）", g_vkinfo.f_shaderInt64},
+                {"textureCompressionBC（BC纹理压缩）", g_vkinfo.f_textureBC},
+                {"sparseBinding（稀疏显存绑定）", g_vkinfo.f_sparseBinding},
+                {"fragmentStoresAndAtomics（片段原子操作）", g_vkinfo.f_fragStoresAtomics},
             };
             for (auto &e : fr) {
                 dp_row(dl, cx, ry, colW, e.k, e.v ? "支持" : "不支持", e.v ? PAL.good : PAL.bad, z++ & 1);
@@ -3321,17 +3321,18 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     io.IniFilename = nullptr;  // do not persist layout
 
     // Embedded fonts + Chinese font merge from system.
+    // High oversampling (4x3) so FontGlobalScale=2x in Wine stays crisp —
+    // the atlas itself is rendered at 4x3 resolution, not upscaled blurry.
     ImFontConfig cfg;
-    cfg.OversampleH = 3; cfg.OversampleV = 2; cfg.PixelSnapH = false;
+    cfg.OversampleH = 4; cfg.OversampleV = 3; cfg.PixelSnapH = false;
     g_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 14.0f, &cfg);
     g_ui_big = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 19.0f, &cfg);
     g_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 12.0f, &cfg);
     g_mono_sm = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 10.0f, &cfg);
     g_mono_bg = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 20.0f, &cfg);
-    // Large faces for the HDR test card, which scales its text with the viewport so
-    // it stays readable on a phone. Lighter oversampling keeps the atlas small.
+    // Large faces for the HDR test card.
     ImFontConfig bigcfg;
-    bigcfg.OversampleH = 2; bigcfg.OversampleV = 1; bigcfg.PixelSnapH = false;
+    bigcfg.OversampleH = 3; bigcfg.OversampleV = 2; bigcfg.PixelSnapH = false;
     g_big_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 30.0f, &bigcfg);
     g_big_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 24.0f, &bigcfg);
     io.FontDefault = g_ui;
