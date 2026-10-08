@@ -3363,7 +3363,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     // which makes 14px text render ~10.5px and blurry after bilinear scaling.
     // Bump the global font scale under Wine so text stays legible; native Windows
     // uses 1.0 (its DPI handling is correct).
-    io.FontGlobalScale = g_is_wine ? 1.5f : 1.0f;
+    io.FontGlobalScale = g_is_wine ? 2.0f : 1.0f;
     { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
 

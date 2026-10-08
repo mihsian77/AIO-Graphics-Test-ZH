@@ -92,16 +92,13 @@ void aio_cpuinfo_query(AioCpuInfo *out) {
         // Fallback: direct cpuid brand string.
         cpuid_brand_string(out->name, sizeof(out->name));
     } else {
-        // Under Winlator/Box64 the registry is often a Wine-generated stub whose
-        // ProcessorNameString is "Box64 vX.Y.Z on ..." instead of the real CPU.
-        // Detect emulator strings and fall back to cpuid for the genuine brand.
-        const char *bad = out->name;
-        int is_emulator = 0;
-        if (strstr(bad, "Box64") || strstr(bad, "box64") ||
-            strstr(bad, "Wine CPU") || strstr(bad, "wine"))
-            is_emulator = 1;
-        if (is_emulator)
-            cpuid_brand_string(out->name, sizeof(out->name));
+        // Under Winlator/Box64 the registry ProcessorNameString is a Wine stub
+        // ("Box64 vX.Y on Unknown CPU..."). cpuid is intercepted by Box64 and
+        // returns the same string, so don't bother — show a clean label instead.
+        if (strstr(out->name, "Box64") || strstr(out->name, "box64") ||
+            strstr(out->name, "Wine CPU")) {
+            snprintf(out->name, sizeof(out->name), "ARM64 (Box64)");
+        }
     }
     reg_read_str(HKEY_LOCAL_MACHINE, key, "ProcessorIdentifier",
                  out->identifier, sizeof(out->identifier));

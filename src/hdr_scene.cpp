@@ -533,8 +533,8 @@ const char *hdr10_reason() {
     bool pq_out = S.have_desc && S.desc_start.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
     if (S.sup_hdr10 == SUP_NO && !pq_out) {
         if (S.dxvk_hdr_set && strcmp(S.dxvk_hdr, "1") == 0)
-            return "DXVK_HDR=1 is set but DXGI reports an SDR output (not DXVK's DXGI, or dxvk.conf turns HDR off)";
-        return "DXVK HDR is off: DXVK_HDR is not set for this process (Bannerlator sets it at launch when HDR output is on)";
+        return "DXVK_HDR=1 已设置，但 DXGI 报告 SDR 输出（非 DXVK DXGI，或 dxvk.conf 关闭了 HDR）";
+        return "DXVK HDR 未开启：DXVK_HDR 环境变量未设置（Bannerlator 启动时会自动设置）";
     }
     if (S.sup_hdr10 == SUP_NO) return "DXVK HDR is on, but the window's surface does not offer HDR10 (PQ): compositor or driver side";
     return "CheckColorSpaceSupport gave no answer";
@@ -1428,27 +1428,27 @@ float draw_status_band(ImDrawList *dl, ImVec2 o, float w, float s, float fps, bo
     char title[64], sub[256];
     ImU32 tcol = C_TEXT;
     if (S.legacy) {
-        snprintf(title, sizeof(title), "SDR ONLY");
+        snprintf(title, sizeof(title), "仅 SDR");
         tcol = C_WARN;
         snprintf(sub, sizeof(sub), "%s", S.legacy_why);
     } else if (S.mode == MODE_HDR10) {
-        snprintf(title, sizeof(title), "HDR10 ON");
+        snprintf(title, sizeof(title), "HDR10 已开启");
         tcol = C_GOOD;
-        snprintf(sub, sizeof(sub), "PQ BT.2020 \xC2\xB7 R10G10B10A2 10-bit \xC2\xB7 flip model \xC2\xB7 vsync");
+        snprintf(sub, sizeof(sub), "PQ BT.2020 \xC2\xB7 R10G10B10A2 10位 \xC2\xB7 Flip 模式 \xC2\xB7 垂直同步");
     } else if (S.mode == MODE_SCRGB) {
-        snprintf(title, sizeof(title), "scRGB ON");
+        snprintf(title, sizeof(title), "scRGB 已开启");
         tcol = C_GOOD;
-        snprintf(sub, sizeof(sub), "linear BT.709 \xC2\xB7 R16G16B16A16 float \xC2\xB7 DXVK converts it to %s for the screen",
+        snprintf(sub, sizeof(sub), "线性 BT.709 \xC2\xB7 R16G16B16A16 浮点 \xC2\xB7 DXVK 转换为 %s 输出",
                  S.sup_hdr10 == SUP_YES ? "PQ" : "sRGB");
     } else if (mode_available(MODE_HDR10)) {
         snprintf(title, sizeof(title), "SDR");
-        snprintf(sub, sizeof(sub), "sRGB \xC2\xB7 R8G8B8A8 8-bit \xC2\xB7 the A/B reference: what a non-HDR game sends");
+        snprintf(sub, sizeof(sub), "sRGB \xC2\xB7 R8G8B8A8 8位 \xC2\xB7 A/B 参考：非 HDR 游戏的输出");
     } else {
-        snprintf(title, sizeof(title), "HDR10 NOT AVAILABLE");
+        snprintf(title, sizeof(title), "HDR10 不可用");
         tcol = C_BAD;
-        snprintf(sub, sizeof(sub), "showing SDR: %s", hdr10_reason());
+        snprintf(sub, sizeof(sub), "当前 SDR 模式：%s", hdr10_reason());
     }
-    if (S.cap > 0 && !S.legacy) appendf(sub, sizeof(sub), " \xC2\xB7 capped %d fps", S.cap);
+    if (S.cap > 0 && !S.legacy) appendf(sub, sizeof(sub), " \xC2\xB7 限帧 %d fps", S.cap);
 
     const float t_px = 26.0f * s, v_px = 15.5f * s, i_px = 14.0f * s, b_px = 15.0f * s;
     float bh = 38.0f * s;
@@ -1496,7 +1496,7 @@ float draw_status_band(ImDrawList *dl, ImVec2 o, float w, float s, float fps, bo
 
     // Whether the compositor can see one fullscreen window (its zero-copy rule).
     char fsl[160];
-    snprintf(fsl, sizeof(fsl), "fullscreen: %s", S.win_state[0] ? S.win_state : "(not read yet)");
+    snprintf(fsl, sizeof(fsl), "全屏：%s", S.win_state[0] ? S.win_state : "(未读取)");
     text(dl, true, i_px, x0, y, S.fullscreen ? C_GOOD : C_WARN, fsl, ww);
     y += text_h(true, i_px, fsl, ww) + 4.0f * s;
 
@@ -1512,7 +1512,7 @@ float draw_status_band(ImDrawList *dl, ImVec2 o, float w, float s, float fps, bo
         if (button(id, bx + m * segw, by, segw - 2.0f * s, bh, kModeLabel[m], st, b_px)) request_mode(m);
     }
     bx += 3.0f * segw + gap * 1.5f;
-    if (button("##hdrvalues", bx, by, valw, bh, S.show_values ? "Card" : "Values", S.show_values ? 1 : 0, b_px))
+    if (button("##hdrvalues", bx, by, valw, bh, S.show_values ? "测试图" : "数值", S.show_values ? 1 : 0, b_px))
         S.show_values = !S.show_values;
 
     dl->AddLine(ImVec2(x0, y + 1.0f), ImVec2(x1, y + 1.0f), C_LINE, 1.0f);
@@ -1537,7 +1537,7 @@ void draw_patterns(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float
         if (ps > hA - lab) ps = hA - lab;
         if (ps < 8.0f) ps = 8.0f;
         const float rx = X0 + (W - (7.0f * ps + 6.0f * gap)) * 0.5f;
-        static const char *const kSub[7] = {"", "SDR white", "", "", "", "DXGI max", "PQ max"};
+        static const char *const kSub[7] = {"", "SDR 白场", "", "", "", "DXGI 最大", "PQ 最大"};
         for (int i = 0; i < 7; ++i) {
             float nits = (i == 5) ? maxn : kPatchNits[i];
             float px = rx + i * (ps + gap);
@@ -1557,8 +1557,8 @@ void draw_patterns(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float
     // B: PQ ramp 0 -> 10000 nits, linear in PQ code, with nits ticks and the DXGI max.
     const float by = Y0 + hA + gap;
     {
-        const char *capt = "PQ ramp  0 -> 10000 nits: it stops getting brighter where your screen clips";
-        if (text_w(false, cap, capt) > W * 0.72f) capt = "PQ ramp  0 -> 10000 nits";
+        const char *capt = "PQ 渐变 0 -> 10000 尼特：屏幕达到峰值亮度后不再变亮";
+        if (text_w(false, cap, capt) > W * 0.72f) capt = "PQ 渐变 0 -> 10000 尼特";
         text(dl, false, cap, X0, by, C_MUTED, capt);
         float rt = by + cap * 1.6f, rb = by + hB - cap * 1.7f;
         if (rb < rt + 6.0f) rb = rt + 6.0f;
@@ -1579,7 +1579,7 @@ void draw_patterns(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float
         dl->AddTriangleFilled(ImVec2(mxp - 5.0f * s, rt - 7.0f * s), ImVec2(mxp + 5.0f * s, rt - 7.0f * s),
                               ImVec2(mxp, rt - 1.0f * s), C_WARN);
         char ml[40];
-        snprintf(ml, sizeof(ml), have_max() ? "DXGI max %.0f" : "assumed max %.0f", maxn);
+        snprintf(ml, sizeof(ml), have_max() ? "DXGI 最大 %.0f" : "估算最大 %.0f", maxn);
         float mw = text_w(true, cap * 0.95f, ml);
         float mlx = mxp + 8.0f * s;
         if (mlx + mw > X1) mlx = mxp - 8.0f * s - mw;
@@ -1590,8 +1590,8 @@ void draw_patterns(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float
     const float cy = by + hB + gap;
     {
         const char *capt = (S.mode == MODE_SDR)
-                               ? "Banding  black -> SDR white: the swapchain is 8-bit now, so both strips step"
-                               : "Banding  black -> 203 nits: the 8-bit strip should step, the 10-bit strip should be smooth";
+                               ? "色带  黑 -> SDR 白场：当前交换链为 8 位，两条色带都有阶梯"
+                               : "色带  黑 -> 203 尼特：8 位色带应有阶梯，10 位色带应平滑";
         text(dl, false, cap, X0, cy, C_MUTED, capt, W);
         float capt_h = text_h(false, cap, capt, W);
         float lw = 70.0f * s;
@@ -1600,8 +1600,8 @@ void draw_patterns(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float
         if (gh < 6.0f) gh = 6.0f;
         add_quad(X0 + lw, gt, X1, gt + gh, K_GRAD, kSdrWhite, 0.0f, 0.0f);
         add_quad(X0 + lw, gt + gh + 4.0f * s, X1, gt + 2.0f * gh + 4.0f * s, K_GRAD8, kSdrWhite, 0.0f, 0.0f);
-        text(dl, true, cap, X0, gt + gh * 0.5f - cap * 0.6f, C_TEXT, "10-bit");
-        text(dl, true, cap, X0, gt + gh + 4.0f * s + gh * 0.5f - cap * 0.6f, C_TEXT, "8-bit");
+        text(dl, true, cap, X0, gt + gh * 0.5f - cap * 0.6f, C_TEXT, "10 位");
+        text(dl, true, cap, X0, gt + gh + 4.0f * s + gh * 0.5f - cap * 0.6f, C_TEXT, "8 位");
     }
 
     // D: the sun (left) and the colour rows (right).
@@ -1615,12 +1615,12 @@ void draw_patterns(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float
         add_quad(X0, dy, X0 + sw, dy + hD, K_SUN, sx, sy, 0.11f, sw / hD, maxn, 0.0f);
         dl->AddRect(ImVec2(X0, dy), ImVec2(X0 + sw, dy + hD), C_LINE, 0.0f, 0, 1.0f);
         char sl[48];
-        snprintf(sl, sizeof(sl), have_max() ? "sun core = DXGI max (%.0f nits)" : "sun core = %.0f nits (assumed)",
+        snprintf(sl, sizeof(sl), have_max() ? "太阳核心 = DXGI 最大（%.0f 尼特）" : "太阳核心 = %.0f 尼特（估算）",
                  maxn);
         text(dl, false, cap * 0.95f, X0 + 6.0f * s, dy + 4.0f * s, C_MUTED, sl, sw - 12.0f * s);
 
         const float gx0 = X0 + sw + gap * 1.5f, gw = X1 - gx0;
-        const char *capt = "BT.709 (top) vs BT.2020 (bottom): the bottom row is deeper in HDR, the same in SDR";
+        const char *capt = "BT.709（上）vs BT.2020（下）：HDR 下下行色域更广，SDR 下两行相同";
         text(dl, false, cap * 0.95f, gx0, dy, C_MUTED, capt, gw);
         float capt_h = text_h(false, cap * 0.95f, capt, gw);
         const float lw2 = 62.0f * s, g2 = 6.0f * s;
@@ -1696,13 +1696,13 @@ void draw_values(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float s
     if (bh < 32.0f) bh = 32.0f;
     const float bw = 124.0f * s, gap = 8.0f * s, b_px = 15.0f * s;
     float hx = X1 - pad - bw;
-    if (button("##hdrrecheck", hx, Y0 + pad, bw, bh, "Re-check", 0, b_px)) S.recheck = true;
+    if (button("##hdrrecheck", hx, Y0 + pad, bw, bh, "重新检测", 0, b_px)) S.recheck = true;
     char pl[32];
-    snprintf(pl, sizeof(pl), "Pace: %s", S.cap == 60 ? "60 fps" : (S.cap == 30 ? "30 fps" : "vsync"));
+    snprintf(pl, sizeof(pl), "节奏：%s", S.cap == 60 ? "60 fps" : (S.cap == 30 ? "30 fps" : "垂直同步"));
     float pw = bw * 1.2f;
     if (button("##hdrpace", hx - gap - pw, Y0 + pad, pw, bh, pl, 0, b_px))
         S.cap = (S.cap == 60) ? 30 : (S.cap == 30 ? 0 : 60);
-    text(dl, false, 22.0f * s, X0 + pad, Y0 + pad + (bh - 22.0f * s * 1.2f) * 0.5f, C_TEXT, "Values");
+    text(dl, false, 22.0f * s, X0 + pad, Y0 + pad + (bh - 22.0f * s * 1.2f) * 0.5f, C_TEXT, "数值");
 
     const float cx0 = X0 + pad, cx1 = X1 - pad - 8.0f * s;
     const float cy0 = Y0 + pad + bh + 10.0f * s, cy1 = Y1 - pad;
