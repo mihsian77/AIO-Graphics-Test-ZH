@@ -2073,25 +2073,13 @@ static void dp_row(ImDrawList *dl, float x, float y, float w, const char *k, con
                    ImU32 vc, bool zebra) {
     if (zebra) dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + 24.0f), IM_COL32(255, 255, 255, 5), 0);
     text_at(dl, g_mono, 11.5f, ImVec2(x + 13.0f, y + 6.0f), PAL.scrMuted, k);
-    // Truncate value text if it would overflow the card.
-    float max_vw = w - text_w(g_mono, 11.5f, k) - 40.0f;
-    if (max_vw < 60.0f) max_vw = w - 80.0f;
-    float vw = text_w(g_mono, 11.5f, v);
-    if (vw > max_vw) {
-        // Binary search for the longest prefix that fits.
-        char buf[256];
-        int lo = 0, hi = (int)strlen(v);
-        while (lo < hi) {
-            int mid = (lo + hi + 1) / 2;
-            strncpy(buf, v, mid); buf[mid] = 0;
-            if (text_w(g_mono, 11.5f, buf) <= max_vw - 10.0f) lo = mid; else hi = mid - 1;
-        }
-        strncpy(buf, v, lo); buf[lo] = 0;
-        strcat(buf, "..");
-        v = buf;
-        vw = text_w(g_mono, 11.5f, v);
-    }
-    text_at(dl, g_mono, 11.5f, ImVec2(x + w - vw - 13.0f, y + 6.0f), vc, v);
+    // Shrink value font if it would overflow; never truncate GPU info strings.
+    float avail = w - text_w(g_mono, 11.5f, k) - 30.0f;
+    if (avail < 80.0f) avail = w - 80.0f;
+    float ps = 11.5f;
+    while (ps > 8.0f && text_w(g_mono, ps, v) > avail) ps -= 0.5f;
+    float vw = text_w(g_mono, ps, v);
+    text_at(dl, g_mono, ps, ImVec2(x + w - vw - 13.0f, y + (24.0f - ps) * 0.5f), vc, v);
 }
 
 // GPU Info: two-column Vulkan | OpenGL instrument cards.
