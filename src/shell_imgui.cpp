@@ -3321,49 +3321,38 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     io.IniFilename = nullptr;  // do not persist layout
 
     // Embedded fonts + Chinese font merge from system.
-    // High oversampling (4x3) so FontGlobalScale=2x in Wine stays crisp —
-    // the atlas itself is rendered at 4x3 resolution, not upscaled blurry.
+    // Under Wine/Winlator we load the atlas at 1.5x resolution so that
+    // FontGlobalScale=1.5 renders 1:1 (no GPU upscaling blur).
+    float fs = g_is_wine ? 1.5f : 1.0f;
     ImFontConfig cfg;
-    cfg.OversampleH = 4; cfg.OversampleV = 3; cfg.PixelSnapH = false;
-    g_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 14.0f, &cfg);
-    g_ui_big = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 19.0f, &cfg);
-    g_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 12.0f, &cfg);
-    g_mono_sm = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 10.0f, &cfg);
-    g_mono_bg = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 20.0f, &cfg);
-    // Large faces for the HDR test card.
+    cfg.OversampleH = 3; cfg.OversampleV = 2; cfg.PixelSnapH = false;
+    g_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 14.0f*fs, &cfg);
+    g_ui_big = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 19.0f*fs, &cfg);
+    g_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 12.0f*fs, &cfg);
+    g_mono_sm = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 10.0f*fs, &cfg);
+    g_mono_bg = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 20.0f*fs, &cfg);
     ImFontConfig bigcfg;
-    bigcfg.OversampleH = 3; bigcfg.OversampleV = 2; bigcfg.PixelSnapH = false;
-    g_big_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 30.0f, &bigcfg);
-    g_big_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 24.0f, &bigcfg);
+    bigcfg.OversampleH = 2; bigcfg.OversampleV = 2; bigcfg.PixelSnapH = false;
+    g_big_ui = io.Fonts->AddFontFromMemoryCompressedBase85TTF(InterUI_compressed_data_base85, 30.0f*fs, &bigcfg);
+    g_big_mono = io.Fonts->AddFontFromMemoryCompressedBase85TTF(CascadiaMono_compressed_data_base85, 24.0f*fs, &bigcfg);
     io.FontDefault = g_ui;
 
-    // Merge CJK glyphs from the EMBEDDED subset font into every face.
-    // Previously this probed C:\Windows\Fonts\msyh.ttc / simhei.ttf etc., but a
-    // pristine Winlator/Wine prefix has none of those Windows-proprietary fonts, so
-    // CreateFileA always failed -> CJK glyphs never merged -> every Chinese char
-    // rendered as '?'. The subset (Noto Sans CJK SC, 316 chars used by the UI) is
-    // compiled in via font_cjk.inc, so there is zero runtime dependency.
     {
         const ImWchar *cn_ranges = io.Fonts->GetGlyphRangesChineseFull();
         struct { ImFont **face; float size; } faces[] = {
-            {&g_ui, 14.0f}, {&g_ui_big, 19.0f}, {&g_mono, 12.0f},
-            {&g_mono_sm, 10.0f}, {&g_mono_bg, 20.0f},
-            {&g_big_ui, 30.0f}, {&g_big_mono, 24.0f},
+            {&g_ui, 14.0f*fs}, {&g_ui_big, 19.0f*fs}, {&g_mono, 12.0f*fs},
+            {&g_mono_sm, 10.0f*fs}, {&g_mono_bg, 20.0f*fs},
+            {&g_big_ui, 30.0f*fs}, {&g_big_mono, 24.0f*fs},
         };
         for (auto &f : faces) {
             ImFontConfig mcfg;
             mcfg.MergeMode = true;
-            mcfg.DstFont = *f.face;  // merge into THIS face, not Fonts.back()
+            mcfg.DstFont = *f.face;
             mcfg.OversampleH = 2; mcfg.OversampleV = 1;
             io.Fonts->AddFontFromMemoryCompressedBase85TTF(
                 CJKFont_compressed_data_base85, f.size, &mcfg, cn_ranges);
         }
-        aio_diag_log("Chinese font merged: embedded Noto Sans CJK SC subset (316 glyphs)");
     }
-    // Font scaling: Winlator downscales the window (e.g. 1280 -> 960 logical),
-    // which makes 14px text render ~10.5px and blurry after bilinear scaling.
-    // Bump the global font scale under Wine so text stays legible; native Windows
-    // uses 1.0 (its DPI handling is correct).
     io.FontGlobalScale = g_is_wine ? 1.5f : 1.0f;
     { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
