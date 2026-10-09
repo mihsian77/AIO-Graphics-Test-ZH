@@ -368,7 +368,7 @@ const char *fmt_str(DXGI_FORMAT f) {
     }
 }
 
-const char *sup_str(int s) { return s == SUP_YES ? "yes" : (s == SUP_NO ? "no" : "unknown"); }
+const char *sup_str(int s) { return s == SUP_YES ? "支持" : (s == SUP_NO ? "不支持" : "未知"); }
 
 DXGI_FORMAT mode_format(int m) {
     return m == MODE_HDR10 ? DXGI_FORMAT_R10G10B10A2_UNORM
@@ -468,11 +468,11 @@ int primaries_kind() {
 const char *primaries_text(char *buf, size_t cap, ImU32 *col) {
     switch (primaries_kind()) {
         case PRIM_STANDIN_P3:
-            snprintf(buf, cap, "DXVK's P3 stand-in (no chromaticity data arrived)");
+            snprintf(buf, cap, "DXVK P3 占位值（未获取到色度数据）");
             if (col) *col = C_WARN;
             break;
         case PRIM_STANDIN_709:
-            snprintf(buf, cap, "DXVK's Rec.709 stand-in (DXVK HDR off, no chromaticity data arrived)");
+            snprintf(buf, cap, "DXVK Rec.709 占位值（DXVK HDR 关闭，未获取到色度数据）");
             if (col) *col = C_WARN;
             break;
         case PRIM_SCREEN: {
@@ -527,17 +527,17 @@ const char *verdict_text(char *buf, size_t cap, ImU32 *col) {
 // Why HDR10 is not selectable.
 const char *hdr10_reason() {
     if (S.legacy) return S.legacy_why;
-    if (!S.sc3) return "IDXGISwapChain3 (DXGI 1.4) is not available";
-    if (!S.pipe_ok) return S.pipe_err[0] ? S.pipe_err : "the card's shaders could not be built";
-    if (S.mode_failed[MODE_HDR10]) return "SetColorSpace1(HDR10) was refused";
+    if (!S.sc3) return "IDXGISwapChain3（DXGI 1.4）不可用";
+    if (!S.pipe_ok) return S.pipe_err[0] ? S.pipe_err : "测试着色器编译失败";
+    if (S.mode_failed[MODE_HDR10]) return "SetColorSpace1(HDR10) 被拒绝";
     bool pq_out = S.have_desc && S.desc_start.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
     if (S.sup_hdr10 == SUP_NO && !pq_out) {
         if (S.dxvk_hdr_set && strcmp(S.dxvk_hdr, "1") == 0)
         return "DXVK_HDR=1 已设置，但 DXGI 报告 SDR 输出（非 DXVK DXGI，或 dxvk.conf 关闭了 HDR）";
         return "DXVK HDR 未开启：DXVK_HDR 环境变量未设置（Bannerlator 启动时会自动设置）";
     }
-    if (S.sup_hdr10 == SUP_NO) return "DXVK HDR is on, but the window's surface does not offer HDR10 (PQ): compositor or driver side";
-    return "CheckColorSpaceSupport gave no answer";
+    if (S.sup_hdr10 == SUP_NO) return "DXVK HDR 已开启，但窗口表面不提供 HDR10（PQ）：合成器或驱动侧问题";
+    return "CheckColorSpaceSupport 未返回结果";
 }
 
 // ---------------------------------------------------------------------------
@@ -642,7 +642,7 @@ void vk_probe_run(VkProbe &r) {
     VkInstance inst = nullptr;
     VkResult vr = create_inst(&ci, nullptr, &inst);
     if (vr != VK_SUCCESS || !inst) {
-        snprintf(r.error, sizeof(r.error), "vkCreateInstance failed (%d)", (int)vr);
+        snprintf(r.error, sizeof(r.error), "vkCreateInstance 失败（%d）", (int)vr);
         return;
     }
     r.instance = true;
@@ -678,7 +678,7 @@ void vk_probe_run(VkProbe &r) {
     if (!pd) {
         snprintf(r.error, sizeof(r.error), "no Vulkan physical device");
     } else if (!has_surface || !r.ext_win32 || !create_surf || !destroy_surf || !get_fmts) {
-        snprintf(r.error, sizeof(r.error), "VK_KHR_surface / VK_KHR_win32_surface not available");
+        snprintf(r.error, sizeof(r.error), "VK_KHR_surface / VK_KHR_win32_surface 不可用");
     } else {
         HINSTANCE hi = GetModuleHandleA(nullptr);
         WNDCLASSA wc;
@@ -690,7 +690,7 @@ void vk_probe_run(VkProbe &r) {
         HWND hw = CreateWindowExA(WS_EX_TOOLWINDOW, "AIOHdrVkProbe", "", WS_POPUP, 0, 0, 64, 64, nullptr,
                                   nullptr, hi, nullptr);
         if (!hw) {
-            snprintf(r.error, sizeof(r.error), "could not create the probe window");
+            snprintf(r.error, sizeof(r.error), "无法创建探测窗口");
         } else {
             VkWin32SurfaceCreateInfoKHR sci;
             memset(&sci, 0, sizeof(sci));
@@ -700,13 +700,13 @@ void vk_probe_run(VkProbe &r) {
             VkSurfaceKHR surf = VK_NULL_HANDLE;
             vr = create_surf(inst, &sci, nullptr, &surf);
             if (vr != VK_SUCCESS) {
-                snprintf(r.error, sizeof(r.error), "vkCreateWin32SurfaceKHR failed (%d)", (int)vr);
+                snprintf(r.error, sizeof(r.error), "vkCreateWin32SurfaceKHR 失败（%d）", (int)vr);
             } else {
                 VkSurfaceFormatKHR fm[64];
                 uint32_t nf = 64;
                 vr = get_fmts(pd, surf, &nf, fm);
                 if (vr < 0) {
-                    snprintf(r.error, sizeof(r.error), "vkGetPhysicalDeviceSurfaceFormatsKHR failed (%d)", (int)vr);
+                    snprintf(r.error, sizeof(r.error), "vkGetPhysicalDeviceSurfaceFormatsKHR 失败（%d）", (int)vr);
                 } else {
                     r.surface = true;
                     r.nformats = (int)nf;
@@ -988,7 +988,7 @@ bool compile(const char *src, const char *entry, const char *target, ID3DBlob **
         snprintf(m, sizeof(m), "shader %s (%s) failed: 0x%08lX %.200s", entry, target, (unsigned long)hr,
                  err ? (const char *)err->GetBufferPointer() : "(no compiler log)");
         ev("%s", m);
-        snprintf(S.pipe_err, sizeof(S.pipe_err), "the card's shader %s failed to compile", entry);
+        snprintf(S.pipe_err, sizeof(S.pipe_err), "测试着色器 %s 编译失败", entry);
         if (err) err->Release();
         if (*out) {
             (*out)->Release();
@@ -1084,7 +1084,7 @@ void create_pipeline(ID3D11Device *dev) {
     dev->CreateBlendState(&bld, &S.bs_premul);
 
     S.pipe_ok = S.vs && S.ps && S.vs_full && S.ps_comp && S.il && S.vb && S.cb_comp && S.rs && S.bs_premul;
-    if (!S.pipe_ok && !S.pipe_err[0]) snprintf(S.pipe_err, sizeof(S.pipe_err), "D3D11 object creation failed");
+    if (!S.pipe_ok && !S.pipe_err[0]) snprintf(S.pipe_err, sizeof(S.pipe_err), "D3D11 对象创建失败");
     ev("card pipeline: %s", S.pipe_ok ? "ready" : S.pipe_err);
 }
 
@@ -1164,136 +1164,131 @@ void build_rows() {
     g_nrows = 0;
     char b1[48], b2[48];
 
-    row_head("DXGI output  (IDXGIOutput6::GetDesc1)");
+    row_head("DXGI 输出（IDXGIOutput6::GetDesc1）");
     if (S.have_desc) {
         const DXGI_OUTPUT_DESC1 &d = S.desc;
         bool hdr_on = d.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
-        row_kv("Colour space", hdr_on ? C_GOOD : C_WARN, "%s: HDR %s", cs_str(d.ColorSpace), hdr_on ? "on" : "off");
+        row_kv("色彩空间", hdr_on ? C_GOOD : C_WARN, "%s：HDR %s", cs_str(d.ColorSpace), hdr_on ? "开启" : "关闭");
         if (S.desc_start.ColorSpace != d.ColorSpace)
-            row_kv("At scene start", C_MUTED, "%s", cs_str(S.desc_start.ColorSpace));
-        row_kv("Bits per colour", C_TEXT, "%u", d.BitsPerColor);
-        row_kv("Max luminance", C_TEXT, "%.1f nits", d.MaxLuminance);
-        row_kv("Full-frame max", C_TEXT, "%.1f nits", d.MaxFullFrameLuminance);
-        row_kv("Min luminance", C_TEXT, "%.4f nits", d.MinLuminance);
-        row_kv("Red primary", C_TEXT, "%.4f, %.4f", d.RedPrimary[0], d.RedPrimary[1]);
-        row_kv("Green primary", C_TEXT, "%.4f, %.4f", d.GreenPrimary[0], d.GreenPrimary[1]);
-        row_kv("Blue primary", C_TEXT, "%.4f, %.4f", d.BluePrimary[0], d.BluePrimary[1]);
-        row_kv("White point", C_TEXT, "%.4f, %.4f", d.WhitePoint[0], d.WhitePoint[1]);
+            row_kv("进入测试时", C_MUTED, "%s", cs_str(S.desc_start.ColorSpace));
+        row_kv("每色位数（色深）", C_TEXT, "%u 位", d.BitsPerColor);
+        row_kv("最大亮度", C_TEXT, "%.1f 尼特", d.MaxLuminance);
+        row_kv("全屏最大亮度", C_TEXT, "%.1f 尼特", d.MaxFullFrameLuminance);
+        row_kv("最小亮度", C_TEXT, "%.4f 尼特", d.MinLuminance);
+        row_kv("红色原色坐标", C_TEXT, "%.4f, %.4f", d.RedPrimary[0], d.RedPrimary[1]);
+        row_kv("绿色原色坐标", C_TEXT, "%.4f, %.4f", d.GreenPrimary[0], d.GreenPrimary[1]);
+        row_kv("蓝色原色坐标", C_TEXT, "%.4f, %.4f", d.BluePrimary[0], d.BluePrimary[1]);
+        row_kv("白点坐标", C_TEXT, "%.4f, %.4f", d.WhitePoint[0], d.WhitePoint[1]);
         {
             char pv[160];
             ImU32 pc = C_TEXT;
             primaries_text(pv, sizeof(pv), &pc);
-            row_kv("Primaries", pc, "%s", pv);
+            row_kv("色域原色", pc, "%s", pv);
         }
     } else {
-        row_kv("GetDesc1", C_BAD, "%s", S.out6 ? "failed" : "IDXGIOutput6 not available");
+        row_kv("GetDesc1", C_BAD, "%s", S.out6 ? "失败" : "IDXGIOutput6 不可用（DXGI 版本过低）");
     }
     {
         char v[200];
         ImU32 vc = C_TEXT;
         verdict_text(v, sizeof(v), &vc);
-        row_kv("Verdict", vc, "%s", v);
+        row_kv("判定", vc, "%s", v);
     }
 
-    row_head("Swap chain");
+    row_head("交换链（Swap Chain）");
     if (S.flip)
-        row_kv("Model", C_TEXT, "flip-discard, 2 buffers, created %u x %u", S.create_w, S.create_h);
+        row_kv("交换链模式", C_TEXT, "Flip-Discard，2 个缓冲，创建尺寸 %u × %u", S.create_w, S.create_h);
     else
-        row_kv("Model", C_WARN, "the shell's own bitblt swapchain (%s)", S.legacy_why);
-    row_kv("Current mode", C_TEXT, "%s: %s + %s", kModeLabel[S.mode], fmt_str(mode_format(S.mode)),
+        row_kv("交换链模式", C_WARN, "程序自带 BitBlt 交换链（%s）", S.legacy_why);
+    row_kv("当前模式", C_TEXT, "%s：%s + %s", kModeLabel[S.mode], fmt_str(mode_format(S.mode)),
            cs_str(mode_cs(S.mode)));
     if (S.sup_hdr10 == SUP_YES)
-        row_kv("HDR10 support", C_GOOD, "yes (R10G10B10A2 + G2084 P2020)");
+        row_kv("HDR10 支持（PQ 曲线）", C_GOOD, "支持（R10G10B10A2 + G2084 P2020）");
     else
-        row_kv("HDR10 support", C_BAD, "%s: %s", sup_str(S.sup_hdr10), hdr10_reason());
-    row_kv("scRGB support", S.sup_scrgb == SUP_YES ? C_TEXT : C_WARN, "%s (R16G16B16A16 float + G10 P709)",
+        row_kv("HDR10 支持（PQ 曲线）", C_BAD, "%s：%s", sup_str(S.sup_hdr10), hdr10_reason());
+    row_kv("scRGB 支持（线性广色域）", S.sup_scrgb == SUP_YES ? C_TEXT : C_WARN, "%s（R16G16B16A16 浮点 + G10 P709）",
            sup_str(S.sup_scrgb));
     row_text(C_MUTED,
-             "DXVK answers yes for scRGB on every FP16 swapchain and converts it to what the surface takes, so "
-             "this does not show what the compositor offers. The Vulkan section below does.");
-    row_kv("sRGB support", S.sup_srgb == SUP_YES ? C_TEXT : C_WARN, "%s", sup_str(S.sup_srgb));
+             "DXVK 在每个 FP16 交换链上都会报告 scRGB 可用，并将其转换为表面实际接受的格式，"
+             "因此此处不代表合成器真正提供的能力。下方 Vulkan 直接检测的结果才准确。");
+    row_kv("sRGB 支持（标准色域）", S.sup_srgb == SUP_YES ? C_TEXT : C_WARN, "%s", sup_str(S.sup_srgb));
     if (!S.flip) {
-        row_kv("SetColorSpace1", C_MUTED, "not called (the shell's own swapchain is in use)");
-        row_kv("SetHDRMetaData", C_MUTED, "not called");
+        row_kv("SetColorSpace1（色彩空间切换）", C_MUTED, "未调用（正在使用程序自带交换链）");
+        row_kv("SetHDRMetaData（HDR 元数据）", C_MUTED, "未调用");
     } else {
-        row_kv("SetColorSpace1", SUCCEEDED(S.hr_cs) ? C_TEXT : C_BAD, "%s", hr_str(S.hr_cs, b1, sizeof(b1)));
+        row_kv("SetColorSpace1（色彩空间切换）", SUCCEEDED(S.hr_cs) ? C_TEXT : C_BAD, "%s", hr_str(S.hr_cs, b1, sizeof(b1)));
         if (S.mode == MODE_SDR)
-            row_kv("SetHDRMetaData", SUCCEEDED(S.hr_meta) ? C_TEXT : C_BAD, "%s (type NONE in SDR)",
+            row_kv("SetHDRMetaData（HDR 元数据）", SUCCEEDED(S.hr_meta) ? C_TEXT : C_BAD, "%s（SDR 模式类型为 NONE）",
                    hr_str(S.hr_meta, b2, sizeof(b2)));
         else
-            row_kv("SetHDRMetaData", SUCCEEDED(S.hr_meta) ? C_TEXT : C_BAD,
-                   "%s (HDR10: max %u, min %.4f, MaxCLL %u, MaxFALL %u nits)", hr_str(S.hr_meta, b2, sizeof(b2)),
+            row_kv("SetHDRMetaData（HDR 元数据）", SUCCEEDED(S.hr_meta) ? C_TEXT : C_BAD,
+                   "%s（HDR10：最大 %u，最小 %.4f，MaxCLL %u，MaxFALL %u 尼特）", hr_str(S.hr_meta, b2, sizeof(b2)),
                    S.meta.MaxMasteringLuminance, S.meta.MinMasteringLuminance / 10000.0,
                    (unsigned)S.meta.MaxContentLightLevel, (unsigned)S.meta.MaxFrameAverageLightLevel);
     }
-    row_kv("DXVK_HDR", S.dxvk_hdr_set ? C_TEXT : C_WARN, "%s", S.dxvk_hdr);
-    row_kv("Adapter", C_TEXT, "%s", S.adapter[0] ? S.adapter : "(unknown)");
+    row_kv("DXVK_HDR 环境变量", S.dxvk_hdr_set ? C_TEXT : C_WARN, "%s", S.dxvk_hdr);
+    row_kv("显卡适配器", C_TEXT, "%s", S.adapter[0] ? S.adapter : "（未知）");
     if (S.cap > 0)
-        row_kv("Present", C_TEXT, "vsync (sync interval 1), capped at %d fps", S.cap);
+        row_kv("呈现方式", C_TEXT, "垂直同步（Sync Interval 1），帧率上限 %d fps", S.cap);
     else
-        row_kv("Present", C_TEXT, "vsync (sync interval 1), no cap");
+        row_kv("呈现方式", C_TEXT, "垂直同步（Sync Interval 1），无上限");
 
-    row_head("Window  (zero-copy needs one fullscreen window)");
-    row_kv("Fullscreen", S.fullscreen ? C_GOOD : C_WARN, "%s", S.win_state[0] ? S.win_state : "(not read yet)");
-    row_kv("Client area", C_TEXT, "%d x %d at %d,%d", S.cl_w, S.cl_h, S.cl_x, S.cl_y);
-    row_kv("Monitor", C_TEXT, "%d x %d at %d,%d", S.mon_w, S.mon_h, S.mon_x, S.mon_y);
-    row_kv("Swapchain now", ((int)S.sc_w == S.cl_w && (int)S.sc_h == S.cl_h) ? C_TEXT : C_WARN, "%u x %u",
+    row_head("窗口（零拷贝需要全屏窗口）");
+    row_kv("全屏状态", S.fullscreen ? C_GOOD : C_WARN, "%s", S.win_state[0] ? S.win_state : "（尚未读取）");
+    row_kv("客户区尺寸", C_TEXT, "%d × %d，位置 %d,%d", S.cl_w, S.cl_h, S.cl_x, S.cl_y);
+    row_kv("显示器尺寸", C_TEXT, "%d × %d，位置 %d,%d", S.mon_w, S.mon_h, S.mon_x, S.mon_y);
+    row_kv("当前交换链尺寸", ((int)S.sc_w == S.cl_w && (int)S.sc_h == S.cl_h) ? C_TEXT : C_WARN, "%u × %u",
            S.sc_w, S.sc_h);
-    row_kv("Window style", C_TEXT, "%s%s", S.popup ? "borderless popup" : "framed window",
-           S.topmost ? ", topmost" : "");
-    row_kv("Frame rate", C_TEXT, "%.0f fps presented", S.fps);
+    row_kv("窗口样式", C_TEXT, "%s%s", S.popup ? "无边框窗口" : "带边框窗口",
+           S.topmost ? "，置顶" : "");
+    row_kv("帧率", C_TEXT, "%.0f fps 呈现", S.fps);
 
-    row_head("Vulkan surface  (no DXVK involved)");
+    row_head("Vulkan 表面（绕过 DXVK 直接检测）");
     LONG vs = g_vk_state;
     if (vs != 2) {
-        row_kv("Probe", C_MUTED, "%s", vs == 1 ? "running..." : "not run");
+        row_kv("探测状态", C_MUTED, "%s", vs == 1 ? "探测中..." : "未探测");
     } else {
         const VkProbe &v = g_vk;
-        if (v.error[0]) row_kv("Probe", C_WARN, "%s", v.error);
-        else row_kv("Probe", C_TEXT, "done (%d surface formats)", v.nformats);
-        if (v.device[0]) row_kv("Device", C_TEXT, "%s", v.device);
+        if (v.error[0]) row_kv("探测状态", C_WARN, "%s", v.error);
+        else row_kv("探测状态", C_TEXT, "完成（%d 种表面格式）", v.nformats);
+        if (v.device[0]) row_kv("设备", C_TEXT, "%s", v.device);
         if (v.instance) {
-            row_kv("VK_EXT_swapchain_colorspace", v.ext_colorspace ? C_GOOD : C_WARN, "%s",
-                   v.ext_colorspace ? "offered" : "not offered");
-            row_kv("VK_EXT_hdr_metadata", v.dev_hdr_meta ? C_GOOD : C_WARN, "%s",
-                   v.dev_hdr_meta ? "offered (metadata can reach the compositor)" : "not offered");
+            row_kv("VK_EXT_swapchain_colorspace（交换链色彩空间扩展）", v.ext_colorspace ? C_GOOD : C_WARN, "%s",
+                   v.ext_colorspace ? "可用" : "不可用");
+            row_kv("VK_EXT_hdr_metadata（HDR 元数据扩展）", v.dev_hdr_meta ? C_GOOD : C_WARN, "%s",
+                   v.dev_hdr_meta ? "可用（元数据可传递给合成器）" : "不可用");
         }
         if (v.surface) {
-            if (v.hdr10 && v.hdr10_deep) row_kv("HDR10 (ST2084)", C_GOOD, "offered: %s", v.hdr10_fmt);
-            else if (v.hdr10) row_kv("HDR10 (ST2084)", C_WARN, "offered, 8-bit formats only (%s)", v.hdr10_fmt);
-            else row_kv("HDR10 (ST2084)", C_WARN, "not offered");
-            row_kv("scRGB (ext. sRGB linear)", v.scrgb ? C_GOOD : C_MUTED, "%s", v.scrgb ? "offered" : "not offered");
-            row_text(C_MUTED, "Formats: %s", v.formats);
+            if (v.hdr10 && v.hdr10_deep) row_kv("HDR10（ST2084 PQ 曲线）", C_GOOD, "可用：%s", v.hdr10_fmt);
+            else if (v.hdr10) row_kv("HDR10（ST2084 PQ 曲线）", C_WARN, "可用，但仅有 8 位格式（%s）", v.hdr10_fmt);
+            else row_kv("HDR10（ST2084 PQ 曲线）", C_WARN, "不可用");
+            row_kv("scRGB（扩展 sRGB 线性）", v.scrgb ? C_GOOD : C_MUTED, "%s", v.scrgb ? "可用" : "不可用");
+            row_text(C_MUTED, "支持的格式：%s", v.formats);
         }
     }
 
-    row_head("Report");
-    if (S.report_ok) row_kv("File", C_TEXT, "%s", S.report_path);
-    else row_kv("File", C_WARN, "could not be written");
-    if (S.mirror_ok) row_kv("Copy", C_TEXT, "Z:\\usr\\tmp\\AIO-Graphics-Test_hdr.txt");
+    row_head("报告");
+    if (S.report_ok) row_kv("报告文件", C_TEXT, "%s", S.report_path);
+    else row_kv("报告文件", C_WARN, "写入失败");
+    if (S.mirror_ok) row_kv("临时副本", C_TEXT, "Z:\\usr\\tmp\\AIO-Graphics-Test_hdr.txt");
 
-    row_head("What to look for");
+    row_head("如何判断结果");
     row_text(C_TEXT,
-             "Real HDR: the 400, 600, 1000 and max patches get brighter step by step, the ramp keeps brightening "
-             "past the 203 mark up to about your screen's peak, and the sun glares.");
+             "真 HDR：400、600、1000 和最大亮度色块逐级变亮，渐变条在越过 203 标记后继续变亮直到屏幕峰值，"
+             "太阳图案有刺眼高光。");
     row_text(C_TEXT,
-             "Tone-mapped: the bright patches still differ but are squeezed together, the ramp flattens early and "
-             "nothing glares.");
+             "色调映射：亮部色块仍有差异但被压缩在一起，渐变条提前变平，没有刺眼高光。");
     row_text(C_TEXT,
-             "Washed out (PQ shown as SDR): everything looks grey and flat, the 80-nit patch looks mid-grey and "
-             "colours are pale.");
+             "发灰（PQ 被当作 SDR 显示）：整体灰暗平淡，80 尼特色块看起来是中灰色，色彩暗淡。");
     row_text(C_TEXT,
-             "Banding: in HDR10 the 8-bit strip shows steps and the 10-bit strip is smooth. Steps in both mean "
-             "something in the chain is 8-bit.");
+             "色带：HDR10 模式下 8 位条带有阶梯、10 位条带平滑。如果两条都有阶梯，说明链路中有环节是 8 位。");
     row_text(C_TEXT,
-             "SDR (A/B): everything from 203 up is the same white, the ramp stops brightening at 203, and the two "
-             "colour rows match.");
+             "SDR（对比）：203 以上的色块全是同一个白色，渐变条在 203 处停止变亮，两行色彩一致。");
     row_text(C_TEXT,
-             "Fullscreen: the corner button (top right) turns the card into one borderless window over the whole "
-             "screen, taskbar included. The fullscreen line should then read yes at 0,0; only then can the "
-             "emulator put the frames straight on the display (zero-copy). Tap Exit Fullscreen to go back.");
-    row_head("Keys");
-    row_text(C_MUTED, "H next mode   V values / card   R re-check   F11 or the corner button fullscreen   Esc leave fullscreen");
+             "全屏：右上角按钮可将测试画面切换为覆盖全屏的无边框窗口（含任务栏区域）。"
+             "全屏状态行应显示「是」且位置为 0,0；只有此时模拟器才能将画面直接输出到屏幕（零拷贝）。按 Esc 或按钮退出全屏。");
+    row_head("快捷键");
+    row_text(C_MUTED, "H 切换模式   V 数值/测试图   R 重新检测   F11 或右上角按钮全屏   Esc 退出全屏");
 }
 
 // Written to <path>.tmp and then renamed over <path>, so a process killed mid-write
@@ -1712,9 +1707,9 @@ void draw_values(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float s
     const float content_h = layout_rows(nullptr, cx0, cx1, 0.0f, px, s);
     const float view_h = cy1 - cy0;
 
-    // Drag / wheel scrolling over the rows (touch arrives as mouse drag under Wine).
+    // Content area drag / wheel scrolling.
     ImGui::SetCursorScreenPos(ImVec2(cx0, cy0));
-    ImGui::InvisibleButton("##hdrvalscroll", ImVec2(cx1 - cx0, view_h));
+    ImGui::InvisibleButton("##hdrvalscroll", ImVec2(cx1 - cx0 - 16.0f * s, view_h));
     ImGuiIO &io = ImGui::GetIO();
     if (ImGui::IsItemActive()) S.scroll -= io.MouseDelta.y;
     if (ImGui::IsItemHovered() && io.MouseWheel != 0.0f) S.scroll -= io.MouseWheel * 48.0f * s;
@@ -1727,14 +1722,41 @@ void draw_values(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float s
     layout_rows(dl, cx0, cx1, cy0 - S.scroll, px, s);
     dl->PopClipRect();
 
-    if (max_scroll > 0.0f) {  // scroll position indicator
+    if (max_scroll > 0.0f) {
+        // Interactive scrollbar: wide enough for touch, click track to page,
+        // drag thumb to seek.
+        float sb_w = 12.0f * s;
+        float sb_x = X1 - pad - sb_w + 4.0f * s;
         float track = view_h;
         float thumb = track * (view_h / content_h);
-        if (thumb < 24.0f * s) thumb = 24.0f * s;
+        if (thumb < 36.0f * s) thumb = 36.0f * s;
         float ty = cy0 + (track - thumb) * (S.scroll / max_scroll);
-        float tx = X1 - pad + 1.0f * s;
-        dl->AddRectFilled(ImVec2(tx, cy0), ImVec2(tx + 4.0f * s, cy1), IM_COL32(255, 255, 255, 18), 2.0f * s);
-        dl->AddRectFilled(ImVec2(tx, ty), ImVec2(tx + 4.0f * s, ty + thumb), IM_COL32(255, 255, 255, 90), 2.0f * s);
+
+        // Track
+        dl->AddRectFilled(ImVec2(sb_x, cy0), ImVec2(sb_x + sb_w, cy1),
+                          IM_COL32(255, 255, 255, 20), 3.0f * s);
+        // Thumb
+        dl->AddRectFilled(ImVec2(sb_x, ty), ImVec2(sb_x + sb_w, ty + thumb),
+                          IM_COL32(255, 255, 255, 100), 3.0f * s);
+
+        // Interactive hit area (wider than visual)
+        ImGui::SetCursorScreenPos(ImVec2(sb_x - 6.0f * s, cy0));
+        ImGui::InvisibleButton("##hdrvalsb", ImVec2(sb_w + 12.0f * s, view_h));
+        if (ImGui::IsItemActive()) {
+            float my = io.MousePos.y;
+            if (io.MouseDelta.y != 0.0f && my >= ty && my <= ty + thumb) {
+                // Drag thumb
+                S.scroll += io.MouseDelta.y * (content_h / track);
+            } else {
+                // Click on track: page toward click point
+                float frac = (my - cy0 - thumb * 0.5f) / (track - thumb);
+                if (frac < 0.0f) frac = 0.0f;
+                if (frac > 1.0f) frac = 1.0f;
+                S.scroll = frac * max_scroll;
+            }
+        }
+        if (S.scroll > max_scroll) S.scroll = max_scroll;
+        if (S.scroll < 0.0f) S.scroll = 0.0f;
     }
 }
 
@@ -1824,7 +1846,7 @@ void aio_hdr_enter(const AioHdrHost *h) {
     }
     DWORD en = GetEnvironmentVariableA("DXVK_HDR", S.dxvk_hdr, sizeof(S.dxvk_hdr));
     S.dxvk_hdr_set = en > 0 && en < sizeof(S.dxvk_hdr);
-    if (!S.dxvk_hdr_set) snprintf(S.dxvk_hdr, sizeof(S.dxvk_hdr), "(not set)");
+    if (!S.dxvk_hdr_set) snprintf(S.dxvk_hdr, sizeof(S.dxvk_hdr), "（未设置）");
     ev("enter: AIO %s, DXVK_HDR=%s", AIO_VERSION, S.dxvk_hdr);
 
     IDXGIAdapter *ad = nullptr;
@@ -1842,7 +1864,7 @@ void aio_hdr_enter(const AioHdrHost *h) {
 
     if (!f2) {
         S.legacy = true;
-        snprintf(S.legacy_why, sizeof(S.legacy_why), "no IDXGIFactory2 (DXGI 1.2): a flip-model swapchain cannot be created");
+        snprintf(S.legacy_why, sizeof(S.legacy_why), "无 IDXGIFactory2（DXGI 1.2）：无法创建 Flip 模式交换链");
         ev("%s", S.legacy_why);
     } else {
         // A window holds one flip-model swapchain, so the shell's goes first.
@@ -1875,7 +1897,7 @@ void aio_hdr_enter(const AioHdrHost *h) {
         } else {
             if (sc1) sc1->Release();
             S.legacy = true;
-            snprintf(S.legacy_why, sizeof(S.legacy_why), "the flip-model swapchain could not be created (%s)", b);
+            snprintf(S.legacy_why, sizeof(S.legacy_why), "无法创建 Flip 模式交换链（%s）", b);
             create_shell_swapchain(h);
         }
     }

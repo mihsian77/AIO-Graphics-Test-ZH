@@ -475,8 +475,9 @@ static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 POINT pt = { LOWORD(lp), HIWORD(lp) };
                 ScreenToClient(hwnd, &pt);
                 RECT rc; GetClientRect(hwnd, &rc);
-                // Title bar strip: top 44px. Skip rightmost ~140px (buttons).
-                if (pt.y >= 0 && pt.y < 44 && pt.x < rc.right - 140)
+                // Title bar strip: top 56px (generous for touch + 1.5x font scale).
+                // Skip rightmost ~160px (window buttons).
+                if (pt.y >= 0 && pt.y < 56 && pt.x < rc.right - 160)
                     return HTCAPTION;
             }
             return hit;
@@ -1916,7 +1917,7 @@ static void bench_sweep_finish() {
     if (rf) {
         fprintf(rf, "AIO Graphics Test - benchmark report\r\n%s   %d s per test\r\n\r\n",
                 g_bench_sweep.ts, g_bench_sweep.secs);
-        fprintf(rf, "%-30s %8s %8s %8s %8s\r\n", "Test", "Avg", "Min", "Max", "1%low");
+        fprintf(rf, "%-30s %8s %8s %8s %8s\r\n", "测试", "平均", "最低", "最高", "1%低帧");
         for (int i = 0; i < g_bench_sweep.nrows; ++i) {
             BHistRow *r = &g_bench_sweep.rows[i];
             fprintf(rf, "%-30s %8.0f %8.0f %8.0f %8.0f\r\n", r->label, r->avg, r->mn, r->mx, r->low1);
@@ -2203,7 +2204,7 @@ static void draw_bench_history(ImVec2 base, float w, float h) {
     float rx = lb.x + pad, ry = lb.y + 4.0f;
     if (g_bhist_n == 0) {
         text_at(ldl, g_mono, 12.0f, ImVec2(rx, ry + 4.0f), PAL.scrMuted,
-                "No past runs yet. Run a benchmark on the Tests tab to record one.");
+                "暂无历史记录。在测试页运行一次基准测试后会自动保存。");
         ImGui::Dummy(ImVec2(availW, 40.0f));
         ImGui::EndChild();
         return;
@@ -2224,16 +2225,16 @@ static void draw_bench_history(ImVec2 base, float w, float h) {
         char hb[96];
         snprintf(hb, sizeof(hb), "%s   -   %d tests   -   %ds", run.ts, run.nrows, run.secs);
         text_at(ldl, g_mono, 11.5f, ImVec2(rx + 10.0f, ry + 6.0f), sel ? PAL.accentInk : PAL.scrText, hb);
-        text_at(ldl, g_mono_sm, 10.0f, ImVec2(hmx.x - 54.0f, ry + 7.0f), PAL.scrMuted, sel ? "hide" : "open");
+        text_at(ldl, g_mono_sm, 10.0f, ImVec2(hmx.x - 54.0f, ry + 7.0f), PAL.scrMuted, sel ? "收起" : "展开");
         if (clk) g_bhist_sel = sel ? -1 : d;
         ry += hdrH + 3.0f;
         if (sel) {
             // Column header + one line per test.
-            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + 14.0f, ry), PAL.scrMuted, "TEST");
-            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 250.0f, ry), PAL.scrMuted, "AVG");
-            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 185.0f, ry), PAL.scrMuted, "MIN");
-            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 120.0f, ry), PAL.scrMuted, "MAX");
-            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 55.0f, ry), PAL.scrMuted, "1%LOW");
+            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + 14.0f, ry), PAL.scrMuted, "测试");
+            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 250.0f, ry), PAL.scrMuted, "平均");
+            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 185.0f, ry), PAL.scrMuted, "最低");
+            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 120.0f, ry), PAL.scrMuted, "最高");
+            text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 55.0f, ry), PAL.scrMuted, "1%低帧");
             ry += 16.0f;
             for (int i = 0; i < run.nrows; ++i) {
                 BHistRow &rr = run.rows[i];
@@ -2386,7 +2387,7 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
     }
     ry += 4.0f;
     text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx0, ry), PAL.scrMuted,
-            "All rows run EMBEDDED in the viewport (no pop-out). Each run is saved to History.");
+            "所有测试在窗口内直接运行（不弹出外部窗口），每次结果自动保存到历史记录。");
     ry += 16.0f;
     // Reserve content height from the child's ORIGIN (lb), not the last widget's
     // cursor: screen_button/checkbox/InvisibleButton leave the ImGui cursor at the
@@ -2422,11 +2423,11 @@ static void draw_disk_history(ImVec2 base, float w, float h) {
         return;
     }
     // column header
-    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + 6.0f, ry), PAL.scrMuted, "WHEN / SIZE / MODE");
-    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 300.0f, ry), PAL.scrMuted, "SEQ R");
-    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 232.0f, ry), PAL.scrMuted, "SEQ W");
-    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 164.0f, ry), PAL.scrMuted, "RND R");
-    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 96.0f, ry), PAL.scrMuted, "RND W");
+    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + 6.0f, ry), PAL.scrMuted, "时间 / 大小 / 模式");
+    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 300.0f, ry), PAL.scrMuted, "顺序读");
+    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 232.0f, ry), PAL.scrMuted, "顺序写");
+    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 164.0f, ry), PAL.scrMuted, "随机读");
+    text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx + availW - 96.0f, ry), PAL.scrMuted, "随机写");
     ry += 18.0f;
     for (int d = 0; d < g_dhist_n; ++d) {
         int idx = g_dhist_n - 1 - d;  // newest first
@@ -2598,7 +2599,7 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
         bold_at(dl, g_mono_bg, 22.0f, ImVec2(tx + 14.0f, tyy + 28.0f), PAL.accentInk, vb);
         float vw = text_w(g_mono_bg, 22.0f, vb);
         if (showval)
-            text_at(dl, g_mono_sm, 10.0f, ImVec2(tx + 14.0f + vw + 5.0f, tyy + 38.0f), PAL.scrMuted, live ? "MB/s (live)" : "MB/s");
+            text_at(dl, g_mono_sm, 10.0f, ImVec2(tx + 14.0f + vw + 5.0f, tyy + 38.0f), PAL.scrMuted, live ? "MB/s（实时）" : "MB/s");
         // sub line
         char sub[48];
         if (haveIops) snprintf(sub, sizeof(sub), "%.0f IOPS", iopsv);
@@ -2619,7 +2620,7 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
     float noteY = ty + 2 * (tileH + gap) + 6.0f;
     if (running)
         text_at(dl, g_mono_sm, 10.0f, ImVec2(x0, noteY), PAL.scrMuted,
-                "Live - each phase updates as it runs; writes a few GB of temp data, then deletes it.");
+                "实时模式：每个阶段运行时即时更新；会写入数 GB 临时数据，测完自动删除。");
     else if (g_disk_cleanup_msg[0])
         text_at(dl, g_mono_sm, 10.0f, ImVec2(x0, noteY), PAL.scrMuted, g_disk_cleanup_msg);
     else if (!have)
@@ -3240,16 +3241,16 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     } else {
         win_style = WS_OVERLAPPEDWINDOW & ~WS_CAPTION;
     }
-    // Centre the window and cap its size to ~85% of the work area so it never
-    // spawns off-screen or oversized on small phone / container resolutions.
+    // Centre the window and cap its size to ~75% of the work area so it leaves
+    // some desktop visible and doesn't dominate small phone / container screens.
     int win_w = 1180, win_h = 720;
     int win_x = 100, win_y = 100;
     {
         RECT wa;
         if (SystemParametersInfoA(SPI_GETWORKAREA, 0, &wa, 0)) {
             int sw = wa.right - wa.left, sh = wa.bottom - wa.top;
-            win_w = std::min(win_w, (int)(sw * 0.85f));
-            win_h = std::min(win_h, (int)(sh * 0.85f));
+            win_w = std::min(win_w, (int)(sw * 0.75f));
+            win_h = std::min(win_h, (int)(sh * 0.75f));
             win_x = wa.left + (sw - win_w) / 2;
             win_y = wa.top + (sh - win_h) / 2;
         }
