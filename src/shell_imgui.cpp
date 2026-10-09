@@ -634,50 +634,50 @@ static const Test kBackends[] = {
     {"DirectDraw (DX7)", "DirectDraw", "ddraw -> DXVK -> Turnip", "Blt flip", H_DDRAW, 884, false},
 };
 static const Test kScenes[] = {
-    {"Spin", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3192, false},
-    {"Textured", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3110, false},
-    {"Instanced 512x", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3114, false},
-    {"Tessellation", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3185, false},
-    {"Compute Particles", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 2303, false},
-    {"GS Exploder", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 2870, false},
-    {"Atomics", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 2540, false},
-    {"Dolphin", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3032, false},
-    {"Banding Test", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3180, false},
-    {"Draw Stress 128", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 2410, false},
-    {"Draw Stress 256", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 1780, false},
-    {"Draw Stress 512", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 1140, false},
-    {"Draw Stress 1024", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 632, false},
-    {"Draw Stress 2048", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 331, false},
+    {"旋转立方体", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
+    {"纹理贴图", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3110, false},
+    {"实例化绘制 512x", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3114, false},
+    {"曲面细分", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3185, false},
+    {"计算着色器粒子", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2303, false},
+    {"几何着色器爆炸", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2870, false},
+    {"原子操作", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2540, false},
+    {"海豚", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3032, false},
+    {"色带测试", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3180, false},
+    {"绘制压力 128", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2410, false},
+    {"绘制压力 256", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 1780, false},
+    {"绘制压力 512", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 1140, false},
+    {"绘制压力 1024", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 632, false},
+    {"绘制压力 2048", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 331, false},
 };
 static const Test kDemos[] = {
-    {"Free Look", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 80, false},
-    {"Planet Fly", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 76, false},
-    {"Raymarch SDF", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 88, false},
-    {"Ocean", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 74, false},
-    {"Ocean v2", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 68, false},
-    {"Mandelbulb", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 52, false},
-    {"Nebula", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 90, false},
-    {"Nebula HD", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 61, false},
-    {"Showcase", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 70, false},
-    {"Space", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 120, false},
-    {"Desert", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 82, false},
-    {"Cityscape", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 66, false},
-    {"Cel Shading", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 240, false},
-    {"Matcap", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 256, false},
+    {"自由视角", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 80, false},
+    {"行星飞行", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 76, false},
+    {"光线步进 SDF", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 88, false},
+    {"海洋", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 74, false},
+    {"海洋 v2", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 68, false},
+    {"曼德布洛特集", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 52, false},
+    {"星云", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 90, false},
+    {"星云高清", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 61, false},
+    {"综合展示", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 70, false},
+    {"太空", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 120, false},
+    {"沙漠", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 82, false},
+    {"城市景观", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 66, false},
+    {"卡通着色", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 240, false},
+    {"材质捕获", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 256, false},
 };
 static const Test kScaling[] = {
-    {"Combo Card", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3190, false},
-    {"Zone Plate", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3200, false},
-    {"Resolution Wedge", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3195, false},
-    {"Lines & Diagonals", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3188, false},
-    {"Checkerboard", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3192, false},
-    {"Hard Edges", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3186, false},
-    {"Banding Test", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3180, false},
+    {"组合测试卡", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3190, false},
+    {"区域板", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3200, false},
+    {"分辨率楔形", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3195, false},
+    {"线条与对角线", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3188, false},
+    {"棋盘格", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
+    {"硬边", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3186, false},
+    {"色带测试", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3180, false},
 };
 static const Test kTools[] = {
-    {"GPU Info", "GPU Info", nullptr, nullptr, H_TOOL, 0, true},
-    {"Benchmark", "Benchmark", nullptr, nullptr, H_TOOL, 0, true},
-    {"Disk Speed", "Disk Speed", nullptr, nullptr, H_TOOL, 0, true},
+    {"GPU 信息", "GPU Info", nullptr, nullptr, H_TOOL, 0, true},
+    {"基准测试", "Benchmark", nullptr, nullptr, H_TOOL, 0, true},
+    {"磁盘测速", "Disk Speed", nullptr, nullptr, H_TOOL, 0, true},
 };
 // Display tests. "HDR" is the D3D11 HDR10 test card (hdr_scene.cpp): not a
 // kScenes[] entry, because it swaps its own flip-model swapchain in while selected.
@@ -2478,11 +2478,11 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
 
     float x0 = base.x + 20.0f, y0 = base.y + 14.0f, availW = w - 40.0f;
     char hbuf[80];
-    snprintf(hbuf, sizeof(hbuf), "Disk speed - %d MB - CPDT method%s", kDiskSizes[g_disk_size_idx],
+    snprintf(hbuf, sizeof(hbuf), "磁盘测速 - %d MB - CPDT 方法%s", kDiskSizes[g_disk_size_idx],
              (st == TQ_DONE && g_diskres.ok) ? g_diskres.storage_class : "");
     // header shows storage class inline when done
     if (st == TQ_DONE && g_diskres.ok) {
-        char h2[110]; snprintf(h2, sizeof(h2), "Disk speed - %d MB - CPDT method - %s",
+        char h2[110]; snprintf(h2, sizeof(h2), "磁盘测速 - %d MB - CPDT 方法 - %s",
                                kDiskSizes[g_disk_size_idx], g_diskres.storage_class);
         dp_header(dl, ImVec2(x0, y0), h2);
     } else {
@@ -2564,13 +2564,13 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
     float gap = 12.0f, tileW = (availW - gap) * 0.5f, tileH = 78.0f;
     bool have = (st == TQ_DONE && g_diskres.ok);
     bool running = (st == TQ_RUNNING);
-    const char *names[4] = {"Sequential read", "Sequential write", "Random read 4K", "Random write 4K"};
+    const char *names[4] = {"顺序读取", "顺序写入", "随机读取 4K", "随机写入 4K"};
     int tphase[4] = {AIO_DISK_PHASE_SEQ_READ, AIO_DISK_PHASE_SEQ_WRITE, AIO_DISK_PHASE_RAND_READ, AIO_DISK_PHASE_RAND_WRITE};
     double pres[4] = {g_disk_prog.seq_read_mbps, g_disk_prog.seq_write_mbps, g_disk_prog.rand_read_mbps, g_disk_prog.rand_write_mbps};
     double dres[4] = {g_diskres.seq_read_mbps, g_diskres.seq_write_mbps, g_diskres.rand_read_mbps, g_diskres.rand_write_mbps};
     double diops[4] = {0, 0, g_diskres.rand_read_iops, g_diskres.rand_write_iops};
     double piops[4] = {0, 0, g_disk_prog.rand_read_iops, g_disk_prog.rand_write_iops};
-    const char *subs[4] = {g_disk_defeat ? "cold - cache-busted" : "cached (quick)", "per-op FlushFileBuffers", "", ""};
+    const char *subs[4] = {g_disk_defeat ? "冷启动 - 缓存已清除" : "缓存命中（快速）", "每次操作 FlushFileBuffers", "", ""};
     double phase_frac = (double)g_disk_prog.phase_x1000 / 1000.0;
     for (int i = 0; i < 4; ++i) {
         float tx = x0 + (i & 1) * (tileW + gap);
@@ -2620,7 +2620,7 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
         text_at(dl, g_mono_sm, 10.0f, ImVec2(x0, noteY), PAL.scrMuted, g_disk_cleanup_msg);
     else if (!have)
         text_at(dl, g_mono_sm, 10.0f, ImVec2(x0, noteY), PAL.scrMuted,
-                "Pick a size and press Run. Throughput is decimal MB/s (1,000,000 bytes).");
+                "选择测试大小后点击运行。吞吐量单位为十进制 MB/s（1,000,000 字节）。");
     ImGui::Dummy(ImVec2(availW, noteY - base.y + 24.0f));
     ImGui::EndChild();
 }
@@ -3364,7 +3364,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     // which makes 14px text render ~10.5px and blurry after bilinear scaling.
     // Bump the global font scale under Wine so text stays legible; native Windows
     // uses 1.0 (its DPI handling is correct).
-    io.FontGlobalScale = g_is_wine ? 2.0f : 1.0f;
+    io.FontGlobalScale = g_is_wine ? 3.0f : 1.0f;
     { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
 

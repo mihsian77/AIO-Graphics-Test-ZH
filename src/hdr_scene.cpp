@@ -498,22 +498,22 @@ const char *primaries_text(char *buf, size_t cap, ImU32 *col) {
 const char *verdict_text(char *buf, size_t cap, ImU32 *col) {
     switch (verdict()) {
         case V_SCREEN:
-            snprintf(buf, cap, "DXGI reports your screen (~%.0f nits): the layer's screen description arrived",
+            snprintf(buf, cap, "DXGI 检测到屏幕信息（约 %.0f 尼特）：已获取显示器描述",
                      S.desc.MaxLuminance);
             if (col) *col = C_GOOD;
             break;
         case V_STANDIN_HDR:
             snprintf(buf, cap,
-                     "DXGI reports DXVK's stand-in (1499/799/0.01): the layer's screen description did not arrive");
+                     "DXGI 报告 DXVK 占位参数（1499/799/0.01）：未获取到真实屏幕描述");
             if (col) *col = C_WARN;
             break;
         case V_STANDIN_SDR:
             snprintf(buf, cap,
-                     "DXGI reports DXVK's SDR stand-in (270/270/0.5): DXVK HDR is off and no screen description arrived");
+                     "DXGI 报告 DXVK SDR 占位参数（270/270/0.5）：DXVK HDR 未开启，无屏幕描述");
             if (col) *col = C_WARN;
             break;
         case V_EMPTY:
-            snprintf(buf, cap, "DXGI reports no luminance at all: this DXGI does not describe the screen (not DXVK's?)");
+            snprintf(buf, cap, "DXGI 未报告任何亮度信息：此 DXGI 不支持屏幕描述（非 DXVK？）");
             if (col) *col = C_WARN;
             break;
         default:
@@ -1485,11 +1485,11 @@ float draw_status_band(ImDrawList *dl, ImVec2 o, float w, float s, float fps, bo
     char info[200];
     if (S.have_desc)
         snprintf(info, sizeof(info),
-                 "DXGI  max %.0f \xC2\xB7 full-frame %.0f \xC2\xB7 min %.4f nits \xC2\xB7 %u bpc \xC2\xB7 DXVK_HDR=%s \xC2\xB7 %.0f fps",
+                 "DXGI 最大 %.0f \xC2\xB7 全屏 %.0f \xC2\xB7 最小 %.4f 尼特 \xC2\xB7 %u 位色深 \xC2\xB7 DXVK_HDR=%s \xC2\xB7 %.0f fps",
                  S.desc.MaxLuminance, S.desc.MaxFullFrameLuminance, S.desc.MinLuminance, S.desc.BitsPerColor,
                  S.dxvk_hdr, fps);
     else
-        snprintf(info, sizeof(info), "DXGI output description unavailable \xC2\xB7 DXVK_HDR=%s \xC2\xB7 %.0f fps",
+        snprintf(info, sizeof(info), "DXGI 输出描述不可用 \xC2\xB7 DXVK_HDR=%s \xC2\xB7 %.0f fps",
                  S.dxvk_hdr, fps);
     text(dl, true, i_px, x0, y, C_TEXT, info, ww);
     y += text_h(true, i_px, info, ww) + 3.0f * s;
@@ -1789,12 +1789,12 @@ void read_window_state(const AioHdrHost *h) {
                     S.cl_h == S.mon_h && sc_match;
     char t[128];
     if (fs)
-        snprintf(t, sizeof(t), "yes (%d x %d at %d,%d)", S.cl_w, S.cl_h, S.cl_x, S.cl_y);
+        snprintf(t, sizeof(t), "是（%d x %d，位置 %d,%d）", S.cl_w, S.cl_h, S.cl_x, S.cl_y);
     else if (!sc_match)
-        snprintf(t, sizeof(t), "no (%d x %d at %d,%d, swapchain %u x %u; screen %d x %d)", S.cl_w, S.cl_h, S.cl_x,
+        snprintf(t, sizeof(t), "否（%d x %d，位置 %d,%d，交换链 %u x %u；屏幕 %d x %d）", S.cl_w, S.cl_h, S.cl_x,
                  S.cl_y, S.sc_w, S.sc_h, S.mon_w, S.mon_h);
     else
-        snprintf(t, sizeof(t), "no (%d x %d at %d,%d; screen %d x %d)", S.cl_w, S.cl_h, S.cl_x, S.cl_y, S.mon_w,
+        snprintf(t, sizeof(t), "否（%d x %d，位置 %d,%d；屏幕 %d x %d）", S.cl_w, S.cl_h, S.cl_x, S.cl_y, S.mon_w,
                  S.mon_h);
     S.fullscreen = fs;
     if (strcmp(t, S.win_state) != 0) {
