@@ -625,14 +625,14 @@ struct Test {
 struct Group { const char *name; const Test *items; int n; };
 
 static const Test kBackends[] = {
-    {"Vulkan", "Vulkan", "vulkan-1 -> Turnip", "FIFO (vsync off)", H_VK, 1420, false},
+    {"Vulkan", "Vulkan", "vulkan-1 -> Turnip", "FIFO（垂直同步）", H_VK, 1420, false},
     {"OpenGL", "OpenGL", "opengl32 -> Zink -> Vulkan", "wglSwapInterval 0", H_GL, 519, false},
     {"Direct3D 12", "Direct3D 12", "d3d12 -> VKD3D -> Turnip", "Flip discard", H_DX12, 850, false},
-    {"Direct3D 11", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX11, 3192, false},
-    {"Direct3D 10", "Direct3D 10", "d3d10 -> DXVK -> Turnip", "FIFO (vsync off)", H_DX10, 2604, false},
+    {"Direct3D 11", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
+    {"Direct3D 10", "Direct3D 10", "d3d10 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX10, 2604, false},
     {"Direct3D 9", "Direct3D 9", "d3d9 -> DXVK -> Turnip", "Immediate", H_DX9, 1175, false},
     {"Direct3D 8", "Direct3D 8", "d3d8 -> d3d9 -> DXVK", "Immediate", H_DX8, 603, false},
-    {"DirectDraw (DX7)", "DirectDraw", "ddraw -> DXVK -> Turnip", "Blt flip", H_DDRAW, 884, false},
+    {"DirectDraw (DX7)", "DirectDraw", "ddraw -> DXVK -> Turnip", "Blt 翻转", H_DDRAW, 884, false},
 };
 static const Test kScenes[] = {
     {"旋转立方体", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
@@ -683,7 +683,7 @@ static const Test kTools[] = {
 // Display tests. "HDR" is the D3D11 HDR10 test card (hdr_scene.cpp): not a
 // kScenes[] entry, because it swaps its own flip-model swapchain in while selected.
 static const Test kDisplay[] = {
-    {"HDR", "Direct3D 11", "d3d11 -> DXGI HDR10 -> DXVK", "Flip discard (vsync)", H_DX11, 0, false},
+    {"HDR", "Direct3D 11", "d3d11 -> DXGI HDR10 -> DXVK", "Flip-Discard（垂直同步）", H_DX11, 0, false},
 };
 static const Group kGroups[] = {
     {"图形后端", kBackends, (int)(sizeof(kBackends) / sizeof(kBackends[0]))},
@@ -2086,7 +2086,7 @@ static void draw_gpu_pane(ImVec2 o, float w, float h) {
     ImDrawList *dl = ImGui::GetWindowDrawList();
     ImVec2 base = ImGui::GetCursorScreenPos();
     float x0 = base.x + 20.0f, y0 = base.y + 18.0f, availW = w - 40.0f;
-    dp_header(dl, ImVec2(x0, y0), "设备与API报告");
+    dp_header(dl, ImVec2(x0, y0), "设备与 API 报告");
 
     LONG st = g_gpu_state;
     if (st != TQ_DONE) {
@@ -2811,7 +2811,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // Present reflects the live shell present-mode toggle when a scene is embedded.
     const char *present_v =
         g_scene_live ? (g_present_vsync ? "FIFO（垂直同步）" : "不限制（0）")
-                     : (g_sel->present ? g_sel->present : "FIFO (vsync off)");
+                     : (g_sel->present ? g_sel->present : "FIFO（垂直同步）");
     // GPU name: real Vulkan physical device (background thread). With an 8 s
     // timeout: if vkCreateInstance wedges (broken DXVK / no ICD) we don't sit on
     // "Querying..." forever — fall back to the GL_RENDERER string (always available
@@ -3294,10 +3294,9 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
             DestroyWindow(hwnd);
             UnregisterClassA(wc.lpszClassName, hInstance);
             MessageBoxA(nullptr,
-                        "No graphics host could be created.\n\n"
-                        "Direct3D 11 (DXVK) and OpenGL (WGL) both failed to initialize.\n"
-                        "The ImGui shell needs either the container's DXVK DLL set or a\n"
-                        "working OpenGL driver.",
+                        "无法创建图形渲染环境。\n\n"
+                        "Direct3D 11（DXVK）和 OpenGL（WGL）均初始化失败。\n"
+                        "请检查容器的 DXVK DLL 配置或 OpenGL 驱动是否正常。",
                         "AIO Graphics Test", MB_OK | MB_ICONERROR);
             return 1;
         }

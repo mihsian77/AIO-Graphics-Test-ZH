@@ -381,7 +381,7 @@ void aio_gpuinfo_query_vk(AioVkInfo *out) {
         }
     }
     snprintf(out->memory, sizeof(out->memory), "%.1f GB %s",
-             (double)best / (1024.0 * 1024.0 * 1024.0), best_local ? "device-local" : "shared");
+             (double)best / (1024.0 * 1024.0 * 1024.0), best_local ? "独立显存" : "共享内存");
 
     VkPhysicalDeviceFeatures feat;
     vkGetPhysicalDeviceFeatures(gpus[sel], &feat);
