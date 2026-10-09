@@ -186,6 +186,11 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
     if (defeat_cache && ram > 0) {
         buster_bytes = ram + ram / 10;
         buster_bytes -= buster_bytes % DISK_BLOCK;
+        // Cap at 2 GiB: on phones with 12-16 GB RAM a RAM-sized buster would fill
+        // the Winlator container's C: drive. 2 GiB is enough to evict most phone
+        // page caches without risking disk-full on a fixed-size container image.
+        const uint64_t BUSTER_CAP = 2ull * 1024 * 1024 * 1024;
+        if (buster_bytes > BUSTER_CAP) { buster_bytes = BUSTER_CAP; buster_short = 1; }
         uint64_t margin = 512ull * 1024 * 1024;
         if (freeb.QuadPart > 0 && total + buster_bytes + margin > freeb.QuadPart) {
             uint64_t avail = (freeb.QuadPart > total + margin) ? freeb.QuadPart - total - margin : 0;

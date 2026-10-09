@@ -559,16 +559,19 @@ static ImFont *g_big_mono = nullptr;  // Cascadia 24 - HDR test card values
 
 static void apply_theme(bool dark) {
     g_dark = dark;
-    // Screen region colors are the same dark instrument surface in BOTH themes.
-    PAL.scr = H(0x080c11); PAL.scr2 = H(0x0c1219); PAL.scrLine = H(0x1b2530);
-    PAL.scrText = H(0xdce6ef); PAL.scrMuted = H(0x7d8b9b);
     PAL.good = H(0x2fae5f); PAL.warn = H(0xd99626); PAL.bad = H(0xe5484d);
     if (dark) {
+        // Dark instrument surface for viewport + tool panes.
+        PAL.scr = H(0x080c11); PAL.scr2 = H(0x0c1219); PAL.scrLine = H(0x1b2530);
+        PAL.scrText = H(0xdce6ef); PAL.scrMuted = H(0x7d8b9b);
         PAL.bg = H(0x070a0e); PAL.bg2 = H(0x0a0e13); PAL.panel = H(0x0f151c);
         PAL.panel2 = H(0x131b24); PAL.panelhi = H(0x18222d); PAL.line = H(0x212c38);
         PAL.line2 = H(0x2c3b4b); PAL.text = H(0xe3ebf3); PAL.muted = H(0x8a97a6);
         PAL.faint = H(0x5f6c7c); PAL.accent = H(0x2fd6c3); PAL.accentInk = H(0x7ff0e4);
     } else {
+        // Light theme: tool panes also get a light surface, not the dark instrument.
+        PAL.scr = H(0xeef2f6); PAL.scr2 = H(0xe2e8ee); PAL.scrLine = H(0xc8d0d9);
+        PAL.scrText = H(0x141b23); PAL.scrMuted = H(0x5b6775);
         PAL.bg = H(0xe9edf1); PAL.bg2 = H(0xdfe4ea); PAL.panel = H(0xffffff);
         PAL.panel2 = H(0xf2f5f8); PAL.panelhi = H(0xe8edf2); PAL.line = H(0xd6dce3);
         PAL.line2 = H(0xc3ccd6); PAL.text = H(0x141b23); PAL.muted = H(0x5b6775);
@@ -1745,40 +1748,40 @@ struct BRow {
 };
 static BRow g_brows[] = {
     {"Vulkan", "Vulkan", "vk", H_VK, -1, 0, 0,0,0,0,nullptr},
-    {"VK: Phong", "Vulkan Phong", "vk --scene phong", H_VK, -1, 0, 0,0,0,0,nullptr},
+    {"VK: 光照", "Vulkan Phong", "vk --scene phong", H_VK, -1, 0, 0,0,0,0,nullptr},
     {"OpenGL", "OpenGL", "gl", H_GL, -1, 0, 0,0,0,0,nullptr},
-    {"DDraw: D3D7", "Direct3D 7 (DirectDraw)", "dx7", H_DDRAW, -1, 0, 0,0,0,0,nullptr},
-    {"DDraw: 2D", "DirectDraw 2D", "ddraw2d", H_DDRAW, -1, 0, 0,0,0,0,nullptr},
-    {"D3D8: Cube", "Direct3D 8", "dx8", H_DX8, -1, 0, 0,0,0,0,nullptr},
-    {"D3D9: Cube", "Direct3D 9", "dx9", H_DX9, -1, 0, 0,0,0,0,nullptr},
-    {"D3D10: Cube", "Direct3D 10", "dx10", H_DX10, -1, 0, 0,0,0,0,nullptr},
-    {"Cube", "D3D11 Cube", "dx11 --scene spin", H_DX11, 0, 0, 0,0,0,0,nullptr},
-    {"Instanced", "D3D11 Instanced", "dx11 --scene instanced", H_DX11, 2, 0, 0,0,0,0,nullptr},
-    {"Tessellate", "D3D11 Tessellation", "dx11 --scene tess", H_DX11, 3, 0, 0,0,0,0,nullptr},
-    {"Compute", "D3D11 Compute Particles", "dx11 --scene compute", H_DX11, 4, 0, 0,0,0,0,nullptr},
-    {"Dolphin", "D3D11 Dolphin", "dx11 --scene dolphin", H_DX11, 5, 0, 0,0,0,0,nullptr},
-    {"Raymarch", "D3D11 Raymarch SDF", "dx11 --scene raymarch", H_DX11, 6, 0, 0,0,0,0,nullptr},
-    {"Ocean", "D3D11 Ocean", "dx11 --scene ocean", H_DX11, 7, 0, 0,0,0,0,nullptr},
-    {"Ocean v2", "D3D11 Ocean v2", "dx11 --scene ocean2", H_DX11, 8, 0, 0,0,0,0,nullptr},
-    {"Mandelbulb", "D3D11 Mandelbulb", "dx11 --scene mandelbulb", H_DX11, 9, 0, 0,0,0,0,nullptr},
-    {"Nebula", "D3D11 Nebula", "dx11 --scene nebula", H_DX11, 10, 0, 0,0,0,0,nullptr},
-    {"Nebula HD", "D3D11 Nebula (detailed)", "dx11 --scene nebula2", H_DX11, 11, 0, 0,0,0,0,nullptr},
-    {"Showcase", "D3D11 Showcase", "dx11 --scene showcase", H_DX11, 12, 0, 0,0,0,0,nullptr},
-    {"Free Look", "D3D11 Free Look (interactive)", "dx11 --scene freelook", H_DEMO, 28, 0, 0,0,0,0,nullptr},
-    {"Planet Fly", "D3D11 Planet Fly (Earth + Mars)", "dx11 --scene planet", H_DEMO, 29, 0, 0,0,0,0,nullptr},
-    {"Space", "D3D11 Space", "dx11 --scene space", H_DX11, 13, 0, 0,0,0,0,nullptr},
-    {"Desert", "D3D11 Desert", "dx11 --scene desert", H_DX11, 14, 0, 0,0,0,0,nullptr},
-    {"Cityscape", "D3D11 Cityscape", "dx11 --scene city", H_DX11, 15, 0, 0,0,0,0,nullptr},
-    {"GS Explode", "D3D11 GS Exploder", "dx11 --scene gsexplode", H_DX11, 16, 0, 0,0,0,0,nullptr},
-    {"Cel", "D3D11 Cel Shading", "dx11 --scene cel", H_DEMO, 17, 0, 0,0,0,0,nullptr},
-    {"Matcap", "D3D11 Matcap", "dx11 --scene matcap", H_DEMO, 18, 0, 0,0,0,0,nullptr},
-    {"Atomics", "D3D11 Atomics", "dx11 --scene atomics", H_DX11, 19, 0, 0,0,0,0,nullptr},
-    {"Draw 128", "D3D11 Draw 128", "dx11 --scene drawstress --draws 128", H_DX11, 20, 128, 0,0,0,0,nullptr},
-    {"Draw 256", "D3D11 Draw 256", "dx11 --scene drawstress --draws 256", H_DX11, 20, 256, 0,0,0,0,nullptr},
-    {"Draw 512", "D3D11 Draw 512", "dx11 --scene drawstress --draws 512", H_DX11, 20, 512, 0,0,0,0,nullptr},
-    {"Draw 1024", "D3D11 Draw 1024", "dx11 --scene drawstress --draws 1024", H_DX11, 20, 1024, 0,0,0,0,nullptr},
-    {"Draw 2048", "D3D11 Draw 2048", "dx11 --scene drawstress --draws 2048", H_DX11, 20, 2048, 0,0,0,0,nullptr},
-    {"D3D12: Cube", "Direct3D 12", "dx12", H_DX12, -1, 0, 0,0,0,0,nullptr},
+    {"DX7: D3D", "Direct3D 7 (DirectDraw)", "dx7", H_DDRAW, -1, 0, 0,0,0,0,nullptr},
+    {"DX7: 2D", "DirectDraw 2D", "ddraw2d", H_DDRAW, -1, 0, 0,0,0,0,nullptr},
+    {"D3D8 立方体", "Direct3D 8", "dx8", H_DX8, -1, 0, 0,0,0,0,nullptr},
+    {"D3D9 立方体", "Direct3D 9", "dx9", H_DX9, -1, 0, 0,0,0,0,nullptr},
+    {"D3D10 立方体", "Direct3D 10", "dx10", H_DX10, -1, 0, 0,0,0,0,nullptr},
+    {"立方体", "D3D11 Cube", "dx11 --scene spin", H_DX11, 0, 0, 0,0,0,0,nullptr},
+    {"实例化", "D3D11 Instanced", "dx11 --scene instanced", H_DX11, 2, 0, 0,0,0,0,nullptr},
+    {"曲面细分", "D3D11 Tessellation", "dx11 --scene tess", H_DX11, 3, 0, 0,0,0,0,nullptr},
+    {"计算粒子", "D3D11 Compute Particles", "dx11 --scene compute", H_DX11, 4, 0, 0,0,0,0,nullptr},
+    {"海豚", "D3D11 Dolphin", "dx11 --scene dolphin", H_DX11, 5, 0, 0,0,0,0,nullptr},
+    {"光线步进", "D3D11 Raymarch SDF", "dx11 --scene raymarch", H_DX11, 6, 0, 0,0,0,0,nullptr},
+    {"海洋", "D3D11 Ocean", "dx11 --scene ocean", H_DX11, 7, 0, 0,0,0,0,nullptr},
+    {"海洋 v2", "D3D11 Ocean v2", "dx11 --scene ocean2", H_DX11, 8, 0, 0,0,0,0,nullptr},
+    {"曼德球", "D3D11 Mandelbulb", "dx11 --scene mandelbulb", H_DX11, 9, 0, 0,0,0,0,nullptr},
+    {"星云", "D3D11 Nebula", "dx11 --scene nebula", H_DX11, 10, 0, 0,0,0,0,nullptr},
+    {"星云高清", "D3D11 Nebula (detailed)", "dx11 --scene nebula2", H_DX11, 11, 0, 0,0,0,0,nullptr},
+    {"综合展示", "D3D11 Showcase", "dx11 --scene showcase", H_DX11, 12, 0, 0,0,0,0,nullptr},
+    {"自由视角", "D3D11 Free Look (interactive)", "dx11 --scene freelook", H_DEMO, 28, 0, 0,0,0,0,nullptr},
+    {"行星飞行", "D3D11 Planet Fly (Earth + Mars)", "dx11 --scene planet", H_DEMO, 29, 0, 0,0,0,0,nullptr},
+    {"太空", "D3D11 Space", "dx11 --scene space", H_DX11, 13, 0, 0,0,0,0,nullptr},
+    {"沙漠", "D3D11 Desert", "dx11 --scene desert", H_DX11, 14, 0, 0,0,0,0,nullptr},
+    {"城市景观", "D3D11 Cityscape", "dx11 --scene city", H_DX11, 15, 0, 0,0,0,0,nullptr},
+    {"几何爆炸", "D3D11 GS Exploder", "dx11 --scene gsexplode", H_DX11, 16, 0, 0,0,0,0,nullptr},
+    {"卡通着色", "D3D11 Cel Shading", "dx11 --scene cel", H_DEMO, 17, 0, 0,0,0,0,nullptr},
+    {"材质捕获", "D3D11 Matcap", "dx11 --scene matcap", H_DEMO, 18, 0, 0,0,0,0,nullptr},
+    {"原子操作", "D3D11 Atomics", "dx11 --scene atomics", H_DX11, 19, 0, 0,0,0,0,nullptr},
+    {"绘制压力 128", "D3D11 Draw 128", "dx11 --scene drawstress --draws 128", H_DX11, 20, 128, 0,0,0,0,nullptr},
+    {"绘制压力 256", "D3D11 Draw 256", "dx11 --scene drawstress --draws 256", H_DX11, 20, 256, 0,0,0,0,nullptr},
+    {"绘制压力 512", "D3D11 Draw 512", "dx11 --scene drawstress --draws 512", H_DX11, 20, 512, 0,0,0,0,nullptr},
+    {"绘制压力 1024", "D3D11 Draw 1024", "dx11 --scene drawstress --draws 1024", H_DX11, 20, 1024, 0,0,0,0,nullptr},
+    {"绘制压力 2048", "D3D11 Draw 2048", "dx11 --scene drawstress --draws 2048", H_DX11, 20, 2048, 0,0,0,0,nullptr},
+    {"D3D12 立方体", "Direct3D 12", "dx12", H_DX12, -1, 0, 0,0,0,0,nullptr},
 };
 static const int g_nbrows = (int)(sizeof(g_brows) / sizeof(g_brows[0]));
 
@@ -1962,7 +1965,7 @@ static void bench_finish_row(double elapsed) {
     if (sum) free(sum);
     r.avg = (float)st.avg; r.mn = (float)st.min; r.mx = (float)st.max;
     g_brow_low1[i] = (float)st.low1;
-    if (g_bench_sweep_active) bench_sweep_add(r.apilabel, r.avg, r.mn, r.mx, g_brow_low1[i]);
+    if (g_bench_sweep_active) bench_sweep_add(r.label, r.avg, r.mn, r.mx, g_brow_low1[i]);
     r.state = 0;
     g_bench_ip_row = -1;
     g_bench_active_scene = -1;
@@ -2228,7 +2231,7 @@ static void draw_bench_history(ImVec2 base, float w, float h) {
         ldl->AddRectFilled(hp, hmx, sel ? H(0x18222d) : (hov ? IM_COL32(255, 255, 255, 10) : IM_COL32(255, 255, 255, 4)), 6.0f);
         if (sel) ldl->AddRectFilled(hp, ImVec2(hp.x + 2.0f, hmx.y), PAL.accent, 0);
         char hb[96];
-        snprintf(hb, sizeof(hb), "%s   -   %d tests   -   %ds", run.ts, run.nrows, run.secs);
+        snprintf(hb, sizeof(hb), "%s   -   %d 项测试   -   %d 秒", run.ts, run.nrows, run.secs);
         text_at(ldl, g_mono, 11.5f, ImVec2(rx + 10.0f, ry + 6.0f), sel ? PAL.accentInk : PAL.scrText, hb);
         text_at(ldl, g_mono_sm, 10.0f, ImVec2(hmx.x - 54.0f, ry + 7.0f), PAL.scrMuted, sel ? "收起" : "展开");
         if (clk) g_bhist_sel = sel ? -1 : d;
@@ -2336,6 +2339,45 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
         listTop = barY + 20.0f;
     }
 
+    // Summary panel after a sweep finishes: average / best / worst + a rough grade.
+    if (!busy && g_bench_sweep.nrows > 0) {
+        float sum = 0, mn = 1e9f, mx = 0; int cnt = 0, best_i = 0, worst_i = 0;
+        for (int i = 0; i < g_bench_sweep.nrows; ++i) {
+            float v = g_bench_sweep.rows[i].avg;
+            if (v <= 0) continue;
+            sum += v; cnt++;
+            if (v > mx) { mx = v; best_i = i; }
+            if (v < mn) { mn = v; worst_i = i; }
+        }
+        if (cnt > 0) {
+            float avg = sum / cnt;
+            const char *grade, *grade_desc;
+            if (avg > 1500)      { grade = "S"; grade_desc = "图形性能极强"; }
+            else if (avg > 800)  { grade = "A"; grade_desc = "图形性能优秀"; }
+            else if (avg > 400)  { grade = "B"; grade_desc = "图形性能良好"; }
+            else if (avg > 150)  { grade = "C"; grade_desc = "图形性能一般"; }
+            else                 { grade = "D"; grade_desc = "图形性能较弱"; }
+            float sy = listTop;
+            dl->AddRectFilled(ImVec2(x0, sy), ImVec2(x0 + availW, sy + 52.0f),
+                              IM_COL32(255, 255, 255, 8), 8.0f);
+            dl->AddRect(ImVec2(x0, sy), ImVec2(x0 + availW, sy + 52.0f), PAL.scrLine, 8.0f, 0, 1.0f);
+            // Grade badge
+            dl->AddRectFilled(ImVec2(x0 + 10, sy + 10), ImVec2(x0 + 44, sy + 42), PAL.accent, 6.0f);
+            float gw = text_w(g_ui_big, 20.0f, grade);
+            bold_at(dl, g_ui_big, 20.0f, ImVec2(x0 + 27 - gw * 0.5f, sy + 15.0f), PAL.accentInk, grade);
+            // Stats
+            char sb[200];
+            snprintf(sb, sizeof(sb), "%s  |  平均 %.0f fps  |  最快：%s（%.0f）  |  最慢：%s（%.0f）",
+                     grade_desc, avg,
+                     g_bench_sweep.rows[best_i].label, mx,
+                     g_bench_sweep.rows[worst_i].label, mn);
+            text_at(dl, g_mono, 11.5f, ImVec2(x0 + 56, sy + 10.0f), PAL.scrText, sb);
+            text_at(dl, g_mono_sm, 9.5f, ImVec2(x0 + 56, sy + 30.0f), PAL.scrMuted,
+                    "评级基于全部已完成测试的平均帧率，仅反映本机容器环境，不同设备和驱动版本结果不同。");
+            listTop = sy + 60.0f;
+        }
+    }
+
     // Scrolling row list that FILLS the remaining pane height (fix 3: no dead space).
     ImGui::SetCursorScreenPos(ImVec2(base.x, listTop));
     ImGui::BeginChild("##benchrows", ImVec2(w, (base.y + h) - listTop - 8.0f), false, ImGuiWindowFlags_NoBackground);
@@ -2357,7 +2399,7 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
         ImU32 nameCol = !avail ? PAL.scrMuted : (running ? PAL.accentInk : PAL.scrText);
         text_at(ldl, g_mono, 11.5f, ImVec2(rx0 + 38.0f, ry + 8.0f), nameCol, r.label);
         if (!avail) {
-            const char *na = "needs D3D11";
+            const char *na = "需要 D3D11";
             float naw = text_w(g_mono_sm, 9.0f, na);
             text_at(ldl, g_mono_sm, 9.0f, ImVec2(rx0 + availW - runW - naw - 8.0f, ry + 9.0f),
                     PAL.scrMuted, na);
@@ -2390,7 +2432,31 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
             bench_enqueue(i);
         ry += ROWH;
     }
-    ry += 4.0f;
+    ry += 8.0f;
+
+    // Summary: average FPS, best test, score.
+    {
+        float sum = 0.0f; int cnt = 0; int best_i = -1;
+        for (int i = 0; i < g_nbrows; ++i) {
+            if (g_brows[i].avg > 0.0f) {
+                sum += g_brows[i].avg; cnt++;
+                if (best_i < 0 || g_brows[i].avg > g_brows[best_i].avg) best_i = i;
+            }
+        }
+        if (cnt > 0) {
+            float avg = sum / cnt;
+            // Score: 0-100, scaled so 3000fps ≈ 100, 60fps ≈ 2.
+            int score = (int)(avg / 30.0f + 0.5f);
+            if (score > 100) score = 100; if (score < 1) score = 1;
+            char sbuf[160];
+            snprintf(sbuf, sizeof(sbuf), "已完成 %d 项测试  ·  平均 %.0f fps  ·  最快: %s %.0f fps  ·  综合评分: %d/100",
+                     cnt, avg, g_brows[best_i].label, g_brows[best_i].avg, score);
+            ImU32 sc = score >= 80 ? PAL.good : (score >= 40 ? PAL.warn : PAL.bad);
+            text_at(ldl, g_mono, 11.0f, ImVec2(rx0, ry), sc, sbuf);
+            ry += 18.0f;
+        }
+    }
+
     text_at(ldl, g_mono_sm, 9.5f, ImVec2(rx0, ry), PAL.scrMuted,
             "所有测试在窗口内直接运行（不弹出外部窗口），每次结果自动保存到历史记录。");
     ry += 16.0f;

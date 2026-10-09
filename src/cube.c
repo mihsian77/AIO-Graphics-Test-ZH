@@ -63,6 +63,7 @@
 #include "gpuinfo.h"  // AIO Graphics Test: --gpuinfo / --report mode
 #include "menu.h"     // AIO Graphics Test: in-app start menu
 #include "bench.h"    // AIO Graphics Test: --bench mode
+#include "disk.h"     // AIO Graphics Test: disk speed test + startup temp cleanup
 #include "hud.h"      // AIO Graphics Test: in-window FPS/API overlay
 #include "watchdog.h" // AIO Graphics Test: hang watchdog (frees a wedged container)
 #include "cube_gl.h"     // AIO Graphics Test: OpenGL cube backend
@@ -4791,6 +4792,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     // before any heavy init, so even an early hard crash leaves a pinpointed record.
     aio_diag_init();
     aio_diag_log("WinMain: entry");
+
+    // Auto-clean leftover disk test temp files from a previous crashed/aborted run.
+    // On phones the cache-buster can be RAM-sized (multi-GB), so never leave it behind.
+    {
+        char *cleanup_rep = aio_disk_cleanup();
+        if (cleanup_rep) { aio_diag_log(cleanup_rep); free(cleanup_rep); }
+    }
     {
         char m[600];
         snprintf(m, sizeof(m), "WinMain args: %s", (pCmdLine && pCmdLine[0]) ? pCmdLine : "(none)");
