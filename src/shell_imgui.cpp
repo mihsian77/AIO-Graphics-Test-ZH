@@ -641,8 +641,8 @@ static const Test kScenes[] = {
     {"曲面细分", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3185, false},
     {"计算着色器粒子", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2303, false},
     {"几何着色器爆炸", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2870, false},
-    {"原子操作", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2540, false},
-    {"海豚", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3032, false},
+    {"原子操作（GPU Atomics）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2540, false},
+    {"海豚网格（Dolphin 模型）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3032, false},
     {"色带测试", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3180, false},
     {"绘制压力 128", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2410, false},
     {"绘制压力 256", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 1780, false},
@@ -651,25 +651,25 @@ static const Test kScenes[] = {
     {"绘制压力 2048", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 331, false},
 };
 static const Test kDemos[] = {
-    {"自由视角", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 80, false},
-    {"行星飞行", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 76, false},
-    {"光线步进 SDF", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 88, false},
+    {"自由视角（Fly-cam）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 80, false},
+    {"行星飞行（Orbit 演示）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 76, false},
+    {"光线步进（Raymarch SDF）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 88, false},
     {"海洋", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 74, false},
     {"海洋 v2", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 68, false},
     {"曼德布洛特集", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 52, false},
     {"星云", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 90, false},
     {"星云高清", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 61, false},
-    {"综合展示", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 70, false},
+    {"场景综合展示（Showcase）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 70, false},
     {"太空", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 120, false},
     {"沙漠", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 82, false},
     {"城市景观", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 66, false},
     {"卡通着色", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 240, false},
-    {"材质捕获", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 256, false},
+    {"材质捕获（Matcap 光照）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 256, false},
 };
 static const Test kScaling[] = {
-    {"组合测试卡", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3190, false},
-    {"区域板", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3200, false},
-    {"分辨率楔形", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3195, false},
+    {"综合测试卡（多项目组合）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3190, false},
+    {"区域板（Zone Plate 清晰度）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3200, false},
+    {"分辨率楔形（Resolution Wedge）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3195, false},
     {"线条与对角线", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3188, false},
     {"棋盘格", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
     {"硬边", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3186, false},
@@ -2073,7 +2073,24 @@ static void dp_row(ImDrawList *dl, float x, float y, float w, const char *k, con
                    ImU32 vc, bool zebra) {
     if (zebra) dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + 24.0f), IM_COL32(255, 255, 255, 5), 0);
     text_at(dl, g_mono, 11.5f, ImVec2(x + 13.0f, y + 6.0f), PAL.scrMuted, k);
+    // Truncate value text if it would overflow the card.
+    float max_vw = w - text_w(g_mono, 11.5f, k) - 40.0f;
+    if (max_vw < 60.0f) max_vw = w - 80.0f;
     float vw = text_w(g_mono, 11.5f, v);
+    if (vw > max_vw) {
+        // Binary search for the longest prefix that fits.
+        char buf[256];
+        int lo = 0, hi = (int)strlen(v);
+        while (lo < hi) {
+            int mid = (lo + hi + 1) / 2;
+            strncpy(buf, v, mid); buf[mid] = 0;
+            if (text_w(g_mono, 11.5f, buf) <= max_vw - 10.0f) lo = mid; else hi = mid - 1;
+        }
+        strncpy(buf, v, lo); buf[lo] = 0;
+        strcat(buf, "..");
+        v = buf;
+        vw = text_w(g_mono, 11.5f, v);
+    }
     text_at(dl, g_mono, 11.5f, ImVec2(x + w - vw - 13.0f, y + 6.0f), vc, v);
 }
 

@@ -2035,8 +2035,8 @@ void aio_hdr_draw_ui(ImDrawList *dl, ImVec2 o, float w, float h, float fps, bool
     if (ImGui::IsKeyPressed(ImGuiKey_R, false)) S.recheck = true;
 
     // Scale everything with the viewport so the card reads the same on a phone.
-    float s = w / 960.0f;
-    if (h / 640.0f < s) s = h / 640.0f;
+    float s = w / 768.0f;
+    if (h / 512.0f < s) s = h / 512.0f;
     if (s < 0.75f) s = 0.75f;
     if (s > 2.6f) s = 2.6f;
     const float M = 14.0f * s;
