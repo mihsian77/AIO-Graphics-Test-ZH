@@ -1,338 +1,99 @@
-# AIO Graphics Test
+# AIO Graphics Test 中文版
 
-An all-in-one graphics **diagnostic + benchmark** tool for the **Winlator / GameHub / GameNative**
-Wine graphics stack on Android (DXVK, VKD3D-Proton, Turnip, Zink). One Windows `.exe` you drop
-into a container — it replaces `vkcube.exe`, `GPUInfo.exe`, and the whole `3d-tests` kit
-(DX8/9/11/12 + GL demos) with a single, touch-friendly, instrumented binary that renders the
-**same cube through every graphics API** so you can see exactly which translation layer is broken
-or slow. On top of the diagnostic cubes it bundles a gallery of detailed **procedural showcase
-scenes** (a photoreal planet, a neon-rain city, moonlit dunes, a volumetric nebula, a "Seascape"
-ocean) that double as fragment-heavy benchmarks, two **interactive fly-cams** (a terrain flyer and
-an Earth→Mars orbital flyer with gamepad support), a **disk-speed benchmark**, and full **light /
-dark themes**.
+Winlator / 各类 Android Wine 容器下的图形诊断和性能测试工具。一个 exe 丢进容器就能跑，
+覆盖 Vulkan、OpenGL、Direct3D 8/9/10/11/12、DirectDraw，自带 HDR 检测、磁盘测速、
+GPU 信息查看和基准测试，不需要额外装任何东西。
 
-> ## 🧭 What's new in v2 — one window, no pop-ups
->
-> **v2 is a ground-up interface rebuild.** In v1 each test opened in its own separate window. In
-> v2 the app is a **single window** with a docked menu on the right and **one live render viewport**
-> — every API and every scene renders **in place, inside that viewport**, and you **swap between them
-> instantly** without a single pop-up window. It's rebuilt on **[Dear ImGui](https://github.com/ocornut/imgui)**
-> (the immediate-mode UI behind RenderDoc, Tracy, and most GPU tooling) for a polished, fluid,
-> professional instrument feel, with a live HUD, a frametime graph, and a telemetry read-out
-> composited over the render.
->
-> **This is v2.1.0** — the single-window app, now with an **[HDR test card](#hdr-test-card)**. Grab it from the [Releases](https://github.com/The412Banner/AIO-Graphics-Test/releases) page.
+这是 [The412Banner/AIO-Graphics-Test](https://github.com/The412Banner/AIO-Graphics-Test) 的中文汉化分支，
+针对 Winlator 触屏环境做了字体、窗口、UI 适配。
 
-Forked from Khronos [Vulkan-Tools `vkcube`](https://github.com/KhronosGroup/Vulkan-Tools)
-(`cube.c`, tag `sdk-1.3.239.0`, Apache-2.0). The self-contained pre-codegen base links `vulkan-1`
-directly (no `cube_functions.h` generation step).
+## 下载
 
-> **Idea & inspiration:** [**Nick (@Xnick417x)**](https://github.com/Xnick417x) — co-author. See [Credits](#credits).
->
-> **▶ Showcase video:** https://youtu.be/gKhwjwjGvWI
+到 [Releases](https://github.com/mihsian77/AIO-Graphics-Test-ZH/releases) 页面下载最新的
+`AIO-Graphics-Test-CN-64bit.exe`（或 32bit 版本），放进容器直接运行，不用安装。
+容器自带的 `vulkan-1.dll` 就能用。
 
-## Download
+## 和原版的区别
 
-Grab the latest `AIO-Graphics-Test-64bit.exe` (or `-32bit.exe`) from the
-[**Releases**](https://github.com/The412Banner/AIO-Graphics-Test/releases) page, drop it into a
-Winlator container, and run it — no install. The container already provides `vulkan-1.dll` (every
-Winlator container does). The exe's embedded cube icon is used as the shortcut art when you add it
-to a container.
+- 界面、测试名、HDR 诊断面板、磁盘测速、GPU 信息全部汉化
+- 嵌入 Noto Sans CJK 中文字体子集，不依赖容器里有没有中文字体，不会出现问号乱码
+- Wine/Winlator 下字体按高分辨率加载，不被容器 DPI 缩放拖糊
+- 去掉 Wine 下的双重标题栏，单窗口模式
+- 窗口顶部区域可拖拽，默认尺寸适配手机容器分辨率
+- CPU 信息在 Box64 环境下显示 ARM64，不报一堆无意义的 Cortex 核心名
+- GPU 名称自动清理 Turnip/Qualcomm 前缀和 (TM) 等杂字符
+- HDR 数值面板的滚动条支持触屏拖拽和点击跳转
+- 技术术语保留英文原名并在括号里加中文说明
 
-## The interface (v2)
+## 界面
 
-A single, resizable window built for a touchscreen (Winlator is touch-first), themeable light or
-dark:
+单窗口设计，右侧是测试列表，左侧是渲染区域：
 
-- **Live render viewport** (left) — the selected test renders here, in place. Pick another test and
-  it **swaps into the same viewport instantly** — no new window ever opens. A translucent HUD pill
-  shows the active **API + live FPS + a scrolling frametime graph**; a telemetry strip along the
-  bottom reports **resolution, present mode, the exact translation path** (e.g. `d3d11 → DXVK →
-  Turnip`), and the **GPU**. The viewport stays a dark instrument surface in both themes.
-- **Docked menu** (right) — every test grouped and one tap away: **Graphics Backends**, **Display
-  Tests** (the [HDR test card](#hdr-test-card)), **DX11 Scenes**, **Showcase Demos**, **Scaling
-  Tests**, and **Tools**. Each row carries a per-API colour chip and an fps hint; the selected row is
-  highlighted. Toggle between a compact **List** and a visual **Grid** from the toolbar.
-- **Fullscreen** — a one-tap button expands the running test to fill the whole window (menu,
-  toolbar, and strips slide away, the HUD stays). Exit with the on-screen **Exit Fullscreen** pill or
-  **F11 / Esc** — it always drops back to the exact view you left, test still running. On the HDR
-  test card the same button makes a true fullscreen window over the whole screen (see below).
-- **Aspect-correct resize** — drag any edge or corner and the render re-fits the window's aspect
-  cleanly (square faces stay square, native resolution, no stretching), coalesced so a drag stays
-  smooth.
-- **Light / dark theme** — toggle from the toolbar; the chrome re-themes, the render screen stays
-  dark.
+- 左侧实时渲染选中的测试项，切换不用开新窗口
+- HUD 显示当前 API、实时 FPS、帧时间曲线
+- 底部信息栏显示分辨率、呈现模式、转换路径（比如 `d3d11 -> DXVK -> Turnip`）、GPU 和 CPU
+- 支持列表/网格两种视图，深色/浅色主题
+- 搜索框可以快速过滤测试项
 
-## Screenshots
+## 测试内容
 
-<table>
-<tr>
-<td width="50%"><img src="docs/screenshots/vulkan-grid-light.png" alt="Vulkan — Grid layout, Light theme"><br><sub><b>Vulkan</b> — Grid menu, light theme</sub></td>
-<td width="50%"><img src="docs/screenshots/d3d12.png" alt="Direct3D 12"><br><sub><b>Direct3D 12</b> → VKD3D → Turnip</sub></td>
-</tr>
-<tr>
-<td><img src="docs/screenshots/d3d11.png" alt="Direct3D 11"><br><sub><b>Direct3D 11</b> → DXVK → Turnip</sub></td>
-<td><img src="docs/screenshots/d3d10.png" alt="Direct3D 10"><br><sub><b>Direct3D 10</b> → DXVK → Turnip</sub></td>
-</tr>
-<tr>
-<td><img src="docs/screenshots/d3d9.png" alt="Direct3D 9"><br><sub><b>Direct3D 9</b> → DXVK → Turnip</sub></td>
-<td><img src="docs/screenshots/d3d8.png" alt="Direct3D 8"><br><sub><b>Direct3D 8</b> → d3d9 → DXVK</sub></td>
-</tr>
-<tr>
-<td><img src="docs/screenshots/directdraw.png" alt="DirectDraw (DX7)"><br><sub><b>DirectDraw (DX7)</b> — the legacy path DXVK doesn't implement</sub></td>
-<td><img src="docs/screenshots/gpu-info.png" alt="GPU Info"><br><sub><b>GPU Info</b> — Vulkan + OpenGL device report</sub></td>
-</tr>
-<tr>
-<td><img src="docs/screenshots/benchmark.png" alt="Benchmark suite"><br><sub><b>Benchmark</b> — per-test + Run All, avg / lows</sub></td>
-<td><img src="docs/screenshots/disk-speed.png" alt="Disk Speed"><br><sub><b>Disk Speed</b> — CPDT-matched in-container storage test</sub></td>
-</tr>
-</table>
+**图形后端**：Vulkan、OpenGL、Direct3D 12/11/10/9/8、DirectDraw (DX7)，
+同一个立方体走不同 API，方便定位哪个转换层出了问题。
 
-*Every backend renders in the same window and swaps in place — no test opens its own window.*
+**D3D11 场景**：旋转立方体、纹理贴图、实例化绘制、曲面细分、计算着色器粒子、
+几何着色器爆炸、原子操作、海豚、色带测试、不同压力级别的绘制测试。
 
-## What it does
+**渲染演示**：自由视角、行星飞行、光线步进、海洋、曼德布洛特集、星云、
+太空、沙漠、城市景观、卡通着色、材质捕获等。
 
-- **Multi-API renderer** — the same cube through **every** graphics API in the Winlator stack, so
-  5 / 6 / 7 / 8 / 9 / 10 / 11 / 12 are all covered — and in v2 **all of them render inside the one
-  viewport and swap in place**:
+**缩放测试**：组合测试卡、区域板、分辨率楔形、线条对角线、棋盘格、硬边、色带等。
 
-  | Backend | Path it exercises |
-  |---|---|
-  | **Vulkan**     | native Vulkan → **Turnip** (no translation — the baseline) |
-  | **OpenGL**     | OpenGL → **Zink / wined3d** → Vulkan |
-  | **DirectDraw (DX5/6/7)** | **Wine `ddraw`** → wined3d → OpenGL — the legacy path **DXVK does not implement**, a genuinely different stack from everything below. A Direct3D 7 immediate-mode cube + a pure-2D blit test. |
-  | **Direct3D 8** | **DXVK** d3d8 → d3d9 → Vulkan |
-  | **Direct3D 9** | **DXVK** d3d9 → Vulkan |
-  | **Direct3D 10**| **DXVK** d3d10 → d3d11 → Vulkan |
-  | **Direct3D 11**| **DXVK** d3d11 → Vulkan |
-  | **Direct3D 12**| **VKD3D-Proton** d3d12 → Vulkan |
+**HDR 测试**：HDR10/scRGB/SDR 三种模式切换，亮度色块、PQ 渐变、色带对比、
+色域对比，数值面板里有完整的 DXGI 交换链和 Vulkan 表面诊断信息。
 
-  > **Two builds, two bitnesses.** Each release ships `AIO-Graphics-Test-64bit.exe` (**64-bit**) and
-  > `AIO-Graphics-Test-32bit.exe` (**32-bit**). A 64-bit process can only load the container's *x64*
-  > DXVK / VKD3D / ddraw DLLs; a 32-bit process loads the separate *x32* set. Since almost every
-  > legacy DirectX game (and all DX5/6/7 titles) runs as 32-bit, the x86 build tests DLLs the x64
-  > build physically can't reach. Use whichever matches the game you're debugging — or run both to
-  > compare the two DLL sets.
+**工具**：GPU 信息（Vulkan + OpenGL 能力查询）、基准测试（多场景跑分记录）、
+磁盘测速（顺序/随机读写，支持真实闪存模式绕过缓存）。
 
-- **DX11 test suite** — Direct3D 11 has the deepest coverage: a suite of scenes, each stressing a
-  different part of the pipeline / DXVK:
+## 命令行
 
-  | Scene | Exercises |
-  |---|---|
-  | Spinning cube | baseline pipeline |
-  | Textured cube | texture upload + SRV + sampler |
-  | Instanced (512 cubes) | instanced draw throughput |
-  | Tessellation | hull/domain shaders (feature level 11) |
-  | Compute particles | the D3D11 compute path (UAV/SRV) |
-  | **Dolphin** | the classic **DolphinVS** underwater scene — the real mesh tweened across 3 keyframes, seafloor + 32-frame animated caustics (see [Credits](#credits)) |
-  | Raymarch SDF | a signed-distance field marched in the pixel shader over a fullscreen triangle — a heavy **fragment-ALU** workload (a different bottleneck from the geometry scenes) |
-  | GS exploder | the **geometry-shader** stage — each triangle pushed out along its face normal (the only scene that exercises GS; emulated on Turnip) |
-  | Cel shading | quantised toon bands + a silhouette outline |
-  | Matcap | a procedural matcap (no texture) — view-space normal → chrome-ball lighting |
-  | Atomics | a histogram built with **`InterlockedAdd`** atomics + clear-UAV + a structured-buffer SRV-in-VS (a correctness probe for the translation layer) |
-  | Draw stress (128–2048) | thousands of **individual draw calls** (not instanced) → **CPU/submit-bound**, a different axis from every GPU-bound scene; pick the draw count to map the scaling curve |
-
-- **Demo Scenes** — a gallery of procedural **showcase** scenes (all ray-marched in the D3D11 pixel
-  shader, so they double as heavy fragment-ALU stress tests):
-
-  | Scene | What it renders |
-  |---|---|
-  | **Space** | a photoreal planet from orbit — multi-octave terrain, biomes + ice caps, drifting clouds with shadowing, ocean sun-glint, atmospheric limb scattering, night-side city lights, cratered asteroids, ACES tonemap |
-  | **Cityscape** | a rainy neon night — hashed buildings with a real skyline, lit windows (frames/curtains/occupant silhouettes), neon signs, taxis, rooftop water tanks + AC units, a wet reflective street, animated rain, cinematic grade |
-  | **Desert** | a moonlit dune sea — rolling heightfield dunes, cool moonlight + soft terrain shadows, wind ripples, a craters moon and a star field |
-  | **Detailed Nebula** | volumetric emission/absorption — glowing gas (red → magenta → reflection-blue temperature palette) + dark dust lanes, three embedded stars lighting the gas from within, dithered front-to-back march |
-  | **Ocean v2** | a "Seascape" sea — choppy summed wave octaves, binary-search heightmap trace, Fresnel sky-reflection vs deep-water refraction, subsurface crest glow, sun specular + sun disk |
-  | **Free Look** 🎮 | an **interactive** SkyFly-style fly-cam over a ridged-mountain + ocean heightfield with volumetric fly-through clouds, altitude atmosphere fading to a star field. Auto-cruises; steer with the cursor / **WASD** / arrows, wheel = speed |
-  | **Planet Fly (Earth + Mars)** 🎮 | leave the surface, watch the horizon **curve into a full globe** from orbit (oceans, ice caps, clouds, atmospheric limb), then fly **~2500 u to a second planet — Mars** (rusty dunes, CO₂ caps, thin sky) and descend onto it. Surface-relative 6-DOF camera with gravity re-orientation; **gamepad (XInput)** supported |
-  | Showcase · Raymarch SDF · Mandelbulb · Volumetric nebula · Ocean · Cel · Matcap | the original lighter procedural scenes (reflections + soft shadows, a raw SDF march, a fractal, simple volumetrics, toon, chrome matcap) |
-
-  > 🎮 **Free Look** and **Planet Fly** are camera-controlled (keyboard / cursor-steer / gamepad),
-  > steered directly inside the viewport; the rest of the gallery is auto-animated.
-
-- **Native-Vulkan scenes** — beyond the textured cube, the Vulkan backend has a **Phong-lit** cube
-  (full ambient + diffuse + specular on the *native* VK path, no DXVK) and a **mesh-shader probe**
-  that reports whether the device/driver exposes `VK_EXT_mesh_shader` (Turnip on Adreno currently
-  does not — the probe is the diagnostic).
-
-- **GPU / driver report** — **Vulkan** and **OpenGL** shown side by side (device, driver + API
-  version, memory, features yes/no, extensions). Replaces `GPUInfo.exe`.
-
-- **Benchmark** — times a run and reports **Avg / Min / Max** + **1%-low** FPS (with a per-frame
-  **CSV**). Min/Max use the 1st/99th percentile so a stray sub-frame glitch can't produce an absurd
-  reading; a short **warm-up window** is excluded so first-frame shader compilation doesn't skew the
-  result.
-  - **Tick what to run** — every test is a checkbox (**Select All / Clear All**); the many D3D11
-    scenes collapse under one **Direct3D 11** group (and draw-stress under one **Draw Stress**
-    sub-row).
-  - **Run Selected / Run All** — sweeps the ticked tests **sequentially and hands-free** (no GPU
-    contention between tests); results fill in as each finishes.
-  - **Selectable length** — 15 / 30 / 45 / 60 s — and a **Vsync toggle**.
-  - **Results** — the full Avg/Min/Max for every test, with a **run picker**: each sweep is saved to
-    disk with a **timestamp**, so previous runs survive app restarts.
-- **Semaphore Probe** — benchmarks the instanced D3D11 cube with **timeline vs binary** semaphores
-  to measure the Turnip-kgsl timeline-semaphore regression, and prints a plain verdict (e.g. *"binary
-  is 1.7× faster"*). (The binary path only differs on a DXVK build that honors
-  `DXVK_DISABLE_TIMELINE_SEMAPHORES`.)
-- **Disk Speed** — a non-graphics view that measures **sequential** and **random 4 KB** read/write
-  throughput (MB/s + IOPS) against a temp file in `%TEMP%` (created and deleted each run) — i.e. the
-  *in-container* storage speed a game actually gets. Pick **256 / 512 / 1024 / 2048 MB** (default
-  **1024 MB**):
-  - **Run (quick)** — fast, but Wine usually serves reads from the OS page cache (RAM), so read
-    numbers are RAM-fast. Good for seeing the cache benefit.
-  - **Real-Flash Read** — before *each* read it writes a RAM-sized **cache-buster** to evict the test
-    file from the page cache, so reads happen *cold* and reflect true storage speed. Both **write**
-    figures are always real (committed straight to storage).
-  - **CrossPlatformDiskTest-matched method** — the random tests run a fixed **7 s** over a **shuffled
-    set of unique 4 KB offsets** (each block touched at most once), and random write is **flushed per
-    operation**. Mirrors the popular [CrossPlatformDiskTest](https://github.com/maxim-saplin/CrossPlatformDiskTest)
-    methodology, so numbers line up on the same device (use a 1 GiB file for apples-to-apples).
-  - **Storage class** — translates sequential speed into a consumer tier (eMMC / UFS 2.1 / 3.1 / 4.0
-    / SSD), hedged *"or better"* since Wine overhead means the real chip may be a tier higher.
-  - **Clear Temp Files** — deletes any multi-GB test files left behind if a run was interrupted, and
-    reports the space freed.
-  - **What's this?** — a scrollable in-app explainer of all of the above.
-- **Live HUD** — the viewport always shows the active API + live FPS + a scrolling **frametime
-  graph** as an integrated overlay, in windowed and fullscreen alike.
-- **Hang watchdog** — if a backend deadlocks (e.g. a broken GL stack blocking in `SwapBuffers`), it
-  self-recovers instead of locking up the container.
-- **Robust by design** — DXVK / VKD3D / d3dcompiler are all loaded **dynamically**, so the exe
-  launches and shows a graceful notice even on a container that lacks them. All output is written to
-  disk too, so results survive a PRoot/Termux OOM-kill mid-test.
-
-## HDR test card
-
-**Display Tests → HDR** checks whether HDR10 really reaches the screen, and shows exactly what the
-game side (DXGI / DXVK) is told about that screen — on a light, mostly black test card instead of a
-heavy game. It is a Direct3D 11 test, so it takes the same path an HDR game takes through DXVK.
-
-While it is selected, the window switches to a real **HDR10 swapchain** (flip model, 10-bit
-`R10G10B10A2`, PQ / BT.2020) and switches back when you pick another test. If anything along the way
-isn't available, the card shows SDR and says why on screen — it never just fails.
-
-- **What DXGI reports about your screen** — `IDXGIOutput6::GetDesc1`: colour space, bit depth, peak /
-  full-frame / minimum brightness and colour primaries, with a plain verdict: *"DXGI reports your
-  screen (~1345 nits)"* when the screen's own description reached DXVK, or *"DXGI reports DXVK's
-  stand-in (1499/799/0.01)"* when it didn't. The primaries are labelled the same way: your screen's
-  colours (and the gamut they are close to), or DXVK's P3 / Rec.709 stand-in.
-- **Patterns you can judge by eye** — brightness patches at 80, 203 (SDR white), 400, 600, 1000
-  nits, your screen's peak and 10000 nits; a PQ ramp from 0 to 10000 nits that stops getting brighter
-  where your screen clips; 10-bit vs 8-bit banding strips (steps in both mean something in the chain
-  is 8-bit); a slowly moving sun at your screen's peak; and BT.709 vs BT.2020 colour rows.
-- **Three modes** — **HDR10**, **scRGB** (16-bit float, converted by DXVK for the screen) and
-  **SDR** (8-bit sRGB) for a straight A/B. Tap to switch.
-- **Vulkan surface probe** — asks the window system directly, with no DXVK involved, which formats
-  and colour spaces it offers (and whether HDR10 comes with a 10-bit format).
-- **Values panel** — every number, the colour-space support results, the `SetColorSpace1` /
-  `SetHDRMetaData` results and a short "what to look for" guide. Drag to scroll; **Re-check** asks
-  again after you change an emulator setting.
-- **True fullscreen / zero-copy** — the corner button turns the card into one borderless window over
-  the whole screen, taskbar included, with the swapchain at exactly the screen size. That is what a
-  compositor needs to put the frames straight on the display (zero-copy). The header's
-  `fullscreen:` line says whether that is met, next to the local time (so photos line up with logs).
-  **Exit Fullscreen** or **Esc** goes back.
-- **Report** — `AIO Results\HDR\AIO-Graphics-Test_hdr.txt`, plus a copy in `Z:\usr\tmp\` when that
-  folder exists. It is rewritten after every change and every 5 s, so it is current even when the
-  app is closed from outside.
-- **Light load** — vsync with a 60 fps cap by default (30 fps or no cap in the Values panel).
-
-HDR needs DXVK with HDR enabled (`DXVK_HDR=1`; Bannerlator sets it when its HDR output setting is
-on) and a screen that offers HDR10. To open the app straight on the card (e.g. from a Start-menu
-shortcut), launch it with **`--hdr`**.
-
-## CLI shortcuts
-
-The single-window app is the primary interface, but the individual backends are still scriptable for
-power users and automation:
-
-| Flag | What it does |
-|------|--------------|
-| *(default)* | Opens the single-window app |
-| `--hdr` | Opens the single-window app straight on the [HDR test card](#hdr-test-card) (Display Tests → HDR) |
-| `--gpuinfo` / `--report` | Dump GL + VK adapter info to console + `AIO-Graphics-Test_report.txt`, then exit |
-| `--cube vk\|gl\|dx7\|dx8\|dx9\|dx10\|dx11\|dx12` | Run a single backend headless (its own window) — used by scripting and the benchmark sweeps |
-| `--cube ddraw2d` | The pure-2D DirectDraw blit test (`dx7` = the DirectDraw 3D cube) |
-| `--cube vk --scene phong\|meshshader` | Native-VK Phong-lit cube, or the mesh-shader probe |
-| `--cube dx11 --scene <name>` | Pick a DX11 scene. **Pipeline:** `spin` `textured` `instanced` `tess` `compute` `dolphin` `gsexplode` `atomics` `drawstress`. **Showcases:** `space` `city` `desert` `nebula2` `ocean2` `showcase` `raymarch` `ocean` `mandelbulb` `nebula` `cel` `matcap`. **Interactive:** `freelook` `planet` |
-| `--cube dx11 --scene drawstress --draws <n>` | Draw-stress with N draws (128 / 256 / 512 / 1024 / 2048) |
-| `--bench <sec>` | Run the launched cube as a timed benchmark (avg/min/max/1%-low + CSV) |
-| `--vsync` | Present with vsync (default is uncapped) |
-| `--autoclose <sec>` | Auto-dismiss the benchmark result popup after N s (Run All uses 3) |
-| `--semaphore timeline\|binary` | Force the DXVK semaphore path (the probe uses this) |
-
-## Build
-
-CI only (no local builds). Cross-compiled Linux → Windows PE on GitHub Actions
-(`.github/workflows/build-windows.yml`) as a **two-arch matrix**: mingw-w64 + Vulkan-Headers + a
-cross-built Vulkan-Loader import lib + glslang + `windres` (icon), plus **Dear ImGui** (pinned,
-compiled with the Win32 + D3D11 backends) and the two **embedded UI fonts** — producing
-`AIO-Graphics-Test-64bit.exe` (**x86_64**) and `AIO-Graphics-Test-32bit.exe` (**i686**). The UI
-layer is C++ (`-fcf-protection=none` for FEX/arm64ec compatibility, static libstdc++/libgcc so
-there's no runtime DLL dependency); the backends stay C. Releases are the exact CI-built artifacts,
-published server-side by `.github/workflows/release.yml` (it takes the successful build of the
-tagged commit and attaches its two exes).
-Only `vulkan-1` is statically imported (always present in a container); `ddraw` / d3d8/9/10/11/12,
-`dxgi`, and `d3dcompiler` are loaded at runtime.
-
-## Layout
+也可以命令行直接跑指定测试，参数和原版一致，比如：
 
 ```
-src/cube.c              forked vkcube + WinMain dispatch (also the Vulkan backend)
-src/shell_imgui.cpp     the v2 single-window app: Dear ImGui shell, docked menu (List/Grid),
-                        live in-viewport render + backend swapping, HUD/telemetry, fullscreen, resize, theming
-src/shell_imgui.h       shell entry point
-src/cube_d3d11.c        Direct3D 11 scene framework + scenes (pipeline tests, procedural showcases, interactive flyers)
-src/cube_d3d11_scene.h  C accessors that let the shell drive the DX11 scenes on its own device
-src/hdr_scene.cpp       HDR test card (Display Tests → HDR): HDR10 swapchain, DXGI + Vulkan probes, patterns, report
-src/hdr_scene.h         HDR test card entry points (driven by the shell)
-src/cube_gl.c           OpenGL backend (WGL)
-src/cube_ddraw.c        DirectDraw / legacy Direct3D backend (DX7 cube + 2D blit)
-src/cube_d3d8.c         Direct3D 8 backend (DXVK d3d8 wrapper)
-src/cube_d3d9.c         Direct3D 9 backend (DXVK)
-src/cube_d3d10.c        Direct3D 10 backend (DXVK)
-src/cube_d3d12.c        Direct3D 12 backend (VKD3D-Proton)
-src/cube_phong.frag     native-Vulkan Phong fragment shader (--scene phong)
-src/disk.c, disk.h      Disk Speed benchmark (seq/random read+write, cache-buster, storage-class estimate)
-src/gpuinfo.c           GL + VK adapter report
-src/bench.c             benchmark instrumentation (avg/min/max/1%-low + CSV, vsync flag)
-src/hud.c               headless in-window FPS/API overlay (for --cube runs)
-src/watchdog.c          render-loop hang watchdog
-src/dolphin_assets.h    embedded DolphinVS assets (generated)
-src/font_ui.inc, font_mono.inc   embedded UI fonts (Inter + Cascadia Code, base85-compressed)
-src/menu.c              legacy v1 Win32 shell (retained during the v2 transition)
-src/app.rc, app.ico     app icon (PE resource; also the Winlator shortcut art)
-tools/gen_dolphin_assets.py   one-time .x/.bmp/.tga → dolphin_assets.h
-tools/gen_icon.sh             regenerate app.ico (ImageMagick)
-cmake/                  mingw-w64 cross toolchain file
-docs/releases/          release notes (the body of each GitHub release)
+AIO-Graphics-Test-CN-64bit.exe vulkan
+AIO-Graphics-Test-CN-64bit.exe dx11 --scene spin
+AIO-Graphics-Test-CN-64bit.exe --force-gl
 ```
 
-## Credits
+## 编译
 
-**AIO Graphics Test** is built by [**The412Banner**](https://github.com/The412Banner) with co-author
-[**Nick (@Xnick417x)**](https://github.com/Xnick417x) — the **idea, inspiration, and ongoing help**
-behind the project. Thank you, Nick. 🙏
+用 GitHub Actions 自动构建，支持 x86_64 和 i686 双架构。本地编译需要 MinGW-w64，
+具体编译参数看 `.github/workflows/build-windows.yml`。
 
-It stands on open-source graphics work and was informed by the `3d-tests` reference kit:
+中文字体子集用 `tools/gen_cjk_font.py` 重新生成，需要系统装了 Noto Sans CJK 和 fonttools：
 
-- **Khronos `vkcube` / Vulkan-Tools** — `src/cube.c` is a fork of `cube/cube.c` (tag
-  `sdk-1.3.239.0`), Apache-2.0. © The Khronos Group, Valve, LunarG.
-- **Vulkan-Headers / Vulkan-Loader / glslang** — Khronos, Apache-2.0 (fetched in CI).
-- **[Dear ImGui](https://github.com/ocornut/imgui)** — the v2 interface layer, MIT © Omar Cornut.
-- **[Cascadia Code](https://github.com/microsoft/cascadia-code)** (SIL OFL, © Microsoft) and
-  **[Inter](https://github.com/rsms/inter)** (SIL OFL, © The Inter Project Authors) — the embedded UI
-  fonts.
-- **DXVK** and **VKD3D-Proton** — the translation layers this tool exercises (not bundled).
+```bash
+python3 tools/gen_cjk_font.py \
+  --ttc /usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc \
+  --font-number 2 --src src --out src/font_cjk.inc --symbol CJKFont
+```
 
-**DolphinVS assets** — the Dolphin scene embeds the original Microsoft *DolphinVS* DirectX SDK
-sample data (dolphin + seafloor meshes, textures, and the 32-frame caustics), parsed into
-`src/dolphin_assets.h`. Those assets are **© Microsoft Corporation**, included for the homage scene;
-all trademarks belong to their owners. This project is independent and not affiliated with or
-endorsed by Microsoft.
+## 源码结构
 
-Full attribution is in [`CREDITS.md`](CREDITS.md). Everything else is reimplemented natively — no
-third-party `.exe` binaries are bundled.
+- `src/shell_imgui.cpp` — 主界面（ImGui shell、字体加载、窗口、测试列表、工具页）
+- `src/hdr_scene.cpp` — HDR 测试卡和数值诊断面板
+- `src/gpuinfo.c` — Vulkan / OpenGL 适配器信息查询
+- `src/cpuinfo.c` — CPU 和内存信息（含 Box64 检测）
+- `src/font_cjk.inc` — 嵌入的中文字体子集（base85 + stb 压缩）
+- `tools/gen_cjk_font.py` — 字体子集化脚本
+- `tools/binary_to_compressed_c.cpp` — ImGui 官方字体编码工具
 
-## License
+## 致谢
 
-Apache-2.0 (inherited from Vulkan-Tools) — see [`LICENSE`](LICENSE). Bundled components keep their
-own licenses: Dear ImGui (MIT), Cascadia Code and Inter (SIL OFL).
+原版作者 [The412Banner](https://github.com/The412Banner)，
+基于 Khronos [Vulkan-Tools vkcube](https://github.com/KhronosGroup/Vulkan-Tools)（Apache-2.0），
+UI 用 [Dear ImGui](https://github.com/ocornut/imgui)，
+中文字体用 [Noto Sans CJK](https://fonts.google.com/noto/specimen/Noto+Sans+SC)。
+
+## 许可证
+
+Apache-2.0，和原版一致。
