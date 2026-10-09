@@ -1317,25 +1317,29 @@ static void render_scene_to_offscreen(int w, int h, double t) {
 // ===========================================================================
 // Draw helpers.
 // ===========================================================================
+// Global font scale: applied in text_at/bold_at/caps_at/text_w directly because
+// ImDrawList::AddText ignores io.FontGlobalScale.  Atlas is loaded at fs× resolution
+// so rendering stays 1:1 (no GPU upscaling blur).
+static float g_fs = 1.0f;
+
 static void text_at(ImDrawList *dl, ImFont *f, float sz, ImVec2 p, ImU32 col, const char *s) {
-    dl->AddText(f, sz, p, col, s);
+    dl->AddText(f, sz * g_fs, p, col, s);
 }
 static float text_w(ImFont *f, float sz, const char *s) {
-    return f->CalcTextSizeA(sz, FLT_MAX, 0.0f, s).x;
+    return f->CalcTextSizeA(sz * g_fs, FLT_MAX, 0.0f, s).x;
 }
 // Uppercase, letter-spaced mono caps (group headers / telemetry keys). Returns width.
 static float caps_at(ImDrawList *dl, ImFont *f, float sz, ImVec2 p, ImU32 col, const char *s,
                      float spacing) {
     float x = p.x;
-    // Walk UTF-8 codepoints (not bytes): ASCII gets uppercase + letter-spacing,
-    // multi-byte CJK chars are emitted whole (one AddText per codepoint).
+    float sfs = sz * g_fs;
+    float spfs = spacing * g_fs;
     while (*s) {
         unsigned char ch = (unsigned char)*s;
         int clen = 1;
         if (ch >= 0xF0) clen = 4;
         else if (ch >= 0xE0) clen = 3;
         else if (ch >= 0xC0) clen = 2;
-        // Emit this codepoint as a null-terminated slice.
         char b[8];
         if (clen == 1) {
             b[0] = (ch >= 'a' && ch <= 'z') ? (char)(ch - 32) : (char)ch;
@@ -1344,16 +1348,16 @@ static float caps_at(ImDrawList *dl, ImFont *f, float sz, ImVec2 p, ImU32 col, c
             for (int i = 0; i < clen; i++) b[i] = s[i];
             b[clen] = 0;
         }
-        dl->AddText(f, sz, ImVec2(x, p.y), col, b);
-        x += f->CalcTextSizeA(sz, FLT_MAX, 0.0f, b).x + spacing;
+        dl->AddText(f, sfs, ImVec2(x, p.y), col, b);
+        x += f->CalcTextSizeA(sfs, FLT_MAX, 0.0f, b).x + spfs;
         s += clen;
     }
-    return x - p.x - spacing;
+    return x - p.x - spfs;
 }
-// Faux-bold: draw twice with a sub-pixel x offset.
 static void bold_at(ImDrawList *dl, ImFont *f, float sz, ImVec2 p, ImU32 col, const char *s) {
-    dl->AddText(f, sz, p, col, s);
-    dl->AddText(f, sz, ImVec2(p.x + 0.6f, p.y), col, s);
+    float sfs = sz * g_fs;
+    dl->AddText(f, sfs, p, col, s);
+    dl->AddText(f, sfs, ImVec2(p.x + 0.6f * g_fs, p.y), col, s);
 }
 
 // A small API chip: rounded square in the given hue.
@@ -3354,6 +3358,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
         }
     }
     io.FontGlobalScale = g_is_wine ? 1.5f : 1.0f;
+    g_fs = io.FontGlobalScale;
     { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
 
