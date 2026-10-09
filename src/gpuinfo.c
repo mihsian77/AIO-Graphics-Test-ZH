@@ -333,26 +333,31 @@ void aio_gpuinfo_query_vk(AioVkInfo *out) {
             strstr(d, "lavapipe") || strstr(d, "swrast")) {
             out->software = 1;
         }
-        // Turnip: strip the "Turnip " / "Qualcomm " prefix and "(TM)" noise,
-        // keep "Adreno 740". Also handle "Adreno (TM) 740" -> "Adreno 740".
+        // Turnip: strip "Turnip "/"Qualcomm " prefix and "(TM)"/"(R)" noise,
+        // keep "Adreno 740".
         if (strstr(d, "Adreno") || strstr(d, "adreno")) {
             char clean[256];
-            const char *a = strstr(d, "dreno");  // points to "dreno" in "Adreno"
+            const char *a = strstr(d, "dreno");
             if (a) {
-                a -= 2;  // back up to "Adreno" (A-d-r-e-n-o)
+                a -= 2;  // back up to "Adreno"
                 snprintf(clean, sizeof(clean), "%s", a);
-                // Remove "(TM)" if present.
-                char *tm = strstr(clean, "(TM)");
-                if (tm) {
-                    // Shift everything after "(TM) " left by 5 chars.
-                    size_t off = tm - clean;
-                    size_t rest = strlen(tm + 5);
-                    memmove(tm, tm + 5, rest + 1);
-                    (void)off;
+                // Remove "(TM)" and "(R)" anywhere, collapse double spaces.
+                for (;;) {
+                    char *p = strstr(clean, "(TM)");
+                    if (!p) p = strstr(clean, "(R)");
+                    if (!p) break;
+                    size_t rest = strlen(p + 4);
+                    memmove(p, p + 4, rest + 1);
                 }
-                // Trim trailing spaces.
+                // Collapse multiple spaces, trim.
+                char *dst = clean;
+                for (char *src = clean; *src; src++) {
+                    if (*src == ' ' && (dst > clean && *(dst-1) == ' ')) continue;
+                    *dst++ = *src;
+                }
+                *dst = '\0';
                 size_t L = strlen(clean);
-                while (L > 0 && clean[L - 1] == ' ') clean[--L] = '\0';
+                while (L > 0 && clean[L-1] == ' ') clean[--L] = '\0';
                 snprintf(out->device, sizeof(out->device), "%s", clean);
             }
         }

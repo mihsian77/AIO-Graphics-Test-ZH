@@ -89,16 +89,15 @@ void aio_cpuinfo_query(AioCpuInfo *out) {
     static const char *key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
     if (!reg_read_str(HKEY_LOCAL_MACHINE, key, "ProcessorNameString",
                        out->name, sizeof(out->name))) {
-        // Fallback: direct cpuid brand string.
         cpuid_brand_string(out->name, sizeof(out->name));
-    } else {
-        // Under Winlator/Box64 the registry ProcessorNameString is a Wine stub
-        // ("Box64 vX.Y on Unknown CPU..."). cpuid is intercepted by Box64 and
-        // returns the same string, so don't bother — show a clean label instead.
-        if (strstr(out->name, "Box64") || strstr(out->name, "box64") ||
-            strstr(out->name, "Wine CPU")) {
-            snprintf(out->name, sizeof(out->name), "ARM64 (Box64)");
-        }
+    }
+    // Under Winlator/Box64 the registry gives "Box64 vX.Y on ..." and cpuid
+    // returns the raw ARM core name (e.g. "Cortex-A710") — neither is useful to
+    // the user. Just show "ARM64".
+    if (strstr(out->name, "Box64") || strstr(out->name, "box64") ||
+        strstr(out->name, "Wine") || strstr(out->name, "Cortex") ||
+        strstr(out->name, "Unknown CPU")) {
+        snprintf(out->name, sizeof(out->name), "ARM64");
     }
     reg_read_str(HKEY_LOCAL_MACHINE, key, "ProcessorIdentifier",
                  out->identifier, sizeof(out->identifier));
