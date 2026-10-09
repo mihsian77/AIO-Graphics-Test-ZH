@@ -2626,9 +2626,9 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
 }
 
 static void draw_tool_pane(ImVec2 o, float w, float h) {
-    if (strcmp(g_sel->name, "GPU Info") == 0) draw_gpu_pane(o, w, h);
-    else if (strcmp(g_sel->name, "Benchmark") == 0) draw_bench_pane(o, w, h);
-    else if (strcmp(g_sel->name, "Disk Speed") == 0) draw_disk_pane(o, w, h);
+    if (strcmp(g_sel->name, "GPU 信息") == 0) draw_gpu_pane(o, w, h);
+    else if (strcmp(g_sel->name, "基准测试") == 0) draw_bench_pane(o, w, h);
+    else if (strcmp(g_sel->name, "磁盘测速") == 0) draw_disk_pane(o, w, h);
 }
 
 // Compact progress overlay drawn OVER the live bench render in the viewport while a
@@ -2690,7 +2690,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // render in the viewport + a compact progress overlay (fix 1), instead of the
     // datapane. When the run/sweep finishes (bench_any_active() false) we fall back
     // to the datapane below.
-    bool bench_view = (strcmp(g_sel->name, "Benchmark") == 0) && bench_any_active();
+    bool bench_view = (strcmp(g_sel->name, "基准测试") == 0) && bench_any_active();
     bool bench_live_img = bench_view && g_scene_live && g_view_tex;
 
     // Background: the LIVE embedded image (DX11 scene OR cross-API readback via the
@@ -3364,7 +3364,7 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
     // which makes 14px text render ~10.5px and blurry after bilinear scaling.
     // Bump the global font scale under Wine so text stays legible; native Windows
     // uses 1.0 (its DPI handling is correct).
-    io.FontGlobalScale = g_is_wine ? 3.0f : 1.0f;
+    io.FontGlobalScale = g_is_wine ? 1.5f : 1.0f;
     { char m[64]; snprintf(m, sizeof(m), "font global scale: %.2f", io.FontGlobalScale); aio_diag_log(m); }
     aio_diag_log("ImGui context + fonts loaded");
 
