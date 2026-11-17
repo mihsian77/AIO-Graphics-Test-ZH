@@ -68,16 +68,34 @@ const float kSdrWhite = 203.0f;
 // Luminance patches (nits). Slot 5 is replaced by the DXGI MaxLuminance.
 const float kPatchNits[7] = {80.0f, 203.0f, 400.0f, 600.0f, 1000.0f, 0.0f, 10000.0f};
 
-// Card colours. The card is a test pattern on black, so it does not follow the theme.
-const ImU32 C_TEXT = IM_COL32(236, 242, 248, 255);
-const ImU32 C_MUTED = IM_COL32(150, 164, 180, 255);
+// Card colours. The test pattern itself is a light pattern on black and does not
+// follow the theme; the diagnostic panels do (see aio_hdr_set_theme).
+ImU32 C_TEXT = IM_COL32(236, 242, 248, 255);
+ImU32 C_MUTED = IM_COL32(150, 164, 180, 255);
 const ImU32 C_FAINT = IM_COL32(96, 110, 126, 255);
 const ImU32 C_GOOD = IM_COL32(88, 214, 141, 255);
 const ImU32 C_WARN = IM_COL32(245, 180, 70, 255);
 const ImU32 C_BAD = IM_COL32(245, 104, 104, 255);
 const ImU32 C_ACCENT = IM_COL32(47, 214, 195, 255);
-const ImU32 C_PANEL = IM_COL32(9, 13, 18, 240);
-const ImU32 C_LINE = IM_COL32(255, 255, 255, 34);
+ImU32 C_PANEL = IM_COL32(9, 13, 18, 240);
+ImU32 C_LINE = IM_COL32(255, 255, 255, 34);
+
+// Called by the shell whenever the theme flips. The HDR card is black in both
+// themes (it has to be, to show the pattern), but the values panel around it used
+// to stay near-black even in the light theme.
+void aio_hdr_set_theme(int dark) {
+    if (dark) {
+        C_TEXT  = IM_COL32(236, 242, 248, 255);
+        C_MUTED = IM_COL32(150, 164, 180, 255);
+        C_PANEL = IM_COL32(9, 13, 18, 240);
+        C_LINE  = IM_COL32(255, 255, 255, 34);
+    } else {
+        C_TEXT  = IM_COL32(20, 27, 35, 255);
+        C_MUTED = IM_COL32(91, 103, 117, 255);
+        C_PANEL = IM_COL32(255, 255, 255, 242);
+        C_LINE  = IM_COL32(0, 0, 0, 46);
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Shaders (compiled at runtime through the shell's lazy D3DCompile shim).

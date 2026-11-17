@@ -591,6 +591,9 @@ static void apply_theme(bool dark) {
     aio_embed_clear_rgb[0] = g_scene_clear[0];
     aio_embed_clear_rgb[1] = g_scene_clear[1];
     aio_embed_clear_rgb[2] = g_scene_clear[2];
+    // HDR keeps a black test card, but its diagnostic panel must follow the theme
+    // (it used to stay near-black in light mode).
+    aio_hdr_set_theme(dark ? 1 : 0);
 
     ImGuiStyle &s = ImGui::GetStyle();
     if (dark) ImGui::StyleColorsDark(); else ImGui::StyleColorsLight();
@@ -630,7 +633,7 @@ struct Group { const char *name; const Test *items; int n; };
 static const Test kBackends[] = {
     {"Vulkan", "Vulkan", "vulkan-1 -> Turnip", "FIFO（垂直同步）", H_VK, 1420, false},
     {"OpenGL", "OpenGL", "opengl32 -> Zink -> Vulkan", "wglSwapInterval 0", H_GL, 519, false},
-    {"Direct3D 12", "Direct3D 12", "d3d12 -> VKD3D -> Turnip", "Flip discard", H_DX12, 850, false},
+    {"Direct3D 12", "Direct3D 12", "d3d12 -> VKD3D -> Turnip", "Flip-Discard（垂直同步）", H_DX12, 850, false},
     {"Direct3D 11", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
     {"Direct3D 10", "Direct3D 10", "d3d10 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX10, 2604, false},
     {"Direct3D 9", "Direct3D 9", "d3d9 -> DXVK -> Turnip", "Immediate", H_DX9, 1175, false},
@@ -645,7 +648,7 @@ static const Test kScenes[] = {
     {"计算着色器粒子", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2303, false},
     {"几何着色器爆炸", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2870, false},
     {"原子操作（GPU Atomics）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2540, false},
-    {"海豚网格（Dolphin 模型）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3032, false},
+    {"海豚", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3032, false},
     {"色带测试", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3180, false},
     {"绘制压力 128", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 2410, false},
     {"绘制压力 256", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 1780, false},
@@ -654,25 +657,25 @@ static const Test kScenes[] = {
     {"绘制压力 2048", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 331, false},
 };
 static const Test kDemos[] = {
-    {"自由视角（Fly-cam）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 80, false},
-    {"行星飞行（Orbit 演示）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 76, false},
-    {"光线步进（Raymarch SDF）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 88, false},
-    {"海洋", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 74, false},
-    {"海洋 v2", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 68, false},
-    {"曼德布洛特集", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 52, false},
-    {"星云", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 90, false},
-    {"星云高清", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 61, false},
-    {"场景综合展示（Showcase）", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 70, false},
-    {"太空", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 120, false},
-    {"沙漠", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 82, false},
-    {"城市景观", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO", H_DEMO, 66, false},
-    {"卡通着色", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 240, false},
-    {"材质捕获（Matcap 光照）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO", H_DEMO, 256, false},
+    {"自由视角", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 80, false},
+    {"行星飞行", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 76, false},
+    {"光线步进", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 88, false},
+    {"海洋", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 74, false},
+    {"海洋 v2", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 68, false},
+    {"曼德布洛特集", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 52, false},
+    {"星云", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 90, false},
+    {"星云高清", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 61, false},
+    {"综合展示", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 70, false},
+    {"太空", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 120, false},
+    {"沙漠", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 82, false},
+    {"城市景观", "Direct3D 11", "raymarch  d3d11 -> DXVK", "FIFO（垂直同步）", H_DEMO, 66, false},
+    {"卡通着色", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DEMO, 240, false},
+    {"材质捕获", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DEMO, 256, false},
 };
 static const Test kScaling[] = {
-    {"综合测试卡（多项目组合）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3190, false},
-    {"区域板（Zone Plate 清晰度）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3200, false},
-    {"分辨率楔形（Resolution Wedge）", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3195, false},
+    {"综合测试卡", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3190, false},
+    {"区域板", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3200, false},
+    {"分辨率楔形", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3195, false},
     {"线条与对角线", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3188, false},
     {"棋盘格", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3192, false},
     {"硬边", "Direct3D 11", "d3d11 -> DXVK -> Turnip", "FIFO（垂直同步）", H_DX11, 3186, false},
@@ -2076,12 +2079,28 @@ static void dp_row(ImDrawList *dl, float x, float y, float w, const char *k, con
                    ImU32 vc, bool zebra) {
     if (zebra) dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + 24.0f), IM_COL32(255, 255, 255, 5), 0);
     text_at(dl, g_mono, 11.5f, ImVec2(x + 13.0f, y + 6.0f), PAL.scrMuted, k);
-    // Shrink value font if it would overflow; never truncate GPU info strings.
+    // Shrink to fit, but stop at 9.5pt: CJK gets mushy below that, so anything
+    // still too wide is ellipsised instead of shrunk into an unreadable smear.
     float avail = w - text_w(g_mono, 11.5f, k) - 30.0f;
     if (avail < 80.0f) avail = w - 80.0f;
     float ps = 11.5f;
-    while (ps > 8.0f && text_w(g_mono, ps, v) > avail) ps -= 0.5f;
+    while (ps > 9.5f && text_w(g_mono, ps, v) > avail) ps -= 0.5f;
     float vw = text_w(g_mono, ps, v);
+    if (vw > avail) {
+        char buf[192];
+        size_t n = strlen(v);
+        if (n >= sizeof(buf)) n = sizeof(buf) - 1;
+        memcpy(buf, v, n);
+        buf[n] = 0;
+        while (n > 0 && text_w(g_mono, ps, buf) > avail - text_w(g_mono, ps, "…")) {
+            // Drop one byte at a time, but never cut a UTF-8 sequence in half.
+            do { --n; } while (n > 0 && ((unsigned char)buf[n] & 0xC0) == 0x80);
+            buf[n] = 0;
+        }
+        strncat(buf, "…", sizeof(buf) - strlen(buf) - 1);
+        v = buf;
+        vw = text_w(g_mono, ps, v);
+    }
     text_at(dl, g_mono, ps, ImVec2(x + w - vw - 13.0f, y + (24.0f - ps) * 0.5f), vc, v);
 }
 
@@ -2339,42 +2358,51 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
         listTop = barY + 20.0f;
     }
 
-    // Summary panel after a sweep finishes: average / best / worst + a rough grade.
+    // Summary after a sweep: plain statistics only. No letter grade - the tests
+    // have wildly different loads (some are vsync-locked near 60, uncapped compute
+    // scenes run into the thousands), so any single averaged score would just
+    // measure whether vsync happens to be on.
     if (!busy && g_bench_sweep.nrows > 0) {
-        float sum = 0, mn = 1e9f, mx = 0; int cnt = 0, best_i = 0, worst_i = 0;
-        for (int i = 0; i < g_bench_sweep.nrows; ++i) {
+        float vals[40]; int cnt = 0, best_i = -1, worst_i = -1;
+        float best_v = -1.0f, worst_v = 1e9f;
+        for (int i = 0; i < g_bench_sweep.nrows && cnt < 40; ++i) {
             float v = g_bench_sweep.rows[i].avg;
             if (v <= 0) continue;
-            sum += v; cnt++;
-            if (v > mx) { mx = v; best_i = i; }
-            if (v < mn) { mn = v; worst_i = i; }
+            vals[cnt++] = v;
+            if (v > best_v) { best_v = v; best_i = i; }
+            if (v < worst_v) { worst_v = v; worst_i = i; }
         }
         if (cnt > 0) {
-            float avg = sum / cnt;
-            const char *grade, *grade_desc;
-            if (avg > 1500)      { grade = "S"; grade_desc = "图形性能极强"; }
-            else if (avg > 800)  { grade = "A"; grade_desc = "图形性能优秀"; }
-            else if (avg > 400)  { grade = "B"; grade_desc = "图形性能良好"; }
-            else if (avg > 150)  { grade = "C"; grade_desc = "图形性能一般"; }
-            else                 { grade = "D"; grade_desc = "图形性能较弱"; }
+            // Median: more honest than a mean when one uncapped scene runs 10x the rest.
+            for (int a = 1; a < cnt; ++a) {
+                float k = vals[a]; int b = a - 1;
+                while (b >= 0 && vals[b] > k) { vals[b + 1] = vals[b]; b--; }
+                vals[b + 1] = k;
+            }
+            float med = (cnt & 1) ? vals[cnt / 2] : (vals[cnt / 2 - 1] + vals[cnt / 2]) * 0.5f;
             float sy = listTop;
-            dl->AddRectFilled(ImVec2(x0, sy), ImVec2(x0 + availW, sy + 52.0f),
+            float panelH = 50.0f;
+            dl->AddRectFilled(ImVec2(x0, sy), ImVec2(x0 + availW, sy + panelH),
                               IM_COL32(255, 255, 255, 8), 8.0f);
-            dl->AddRect(ImVec2(x0, sy), ImVec2(x0 + availW, sy + 52.0f), PAL.scrLine, 8.0f, 0, 1.0f);
-            // Grade badge
-            dl->AddRectFilled(ImVec2(x0 + 10, sy + 10), ImVec2(x0 + 44, sy + 42), PAL.accent, 6.0f);
-            float gw = text_w(g_ui_big, 20.0f, grade);
-            bold_at(dl, g_ui_big, 20.0f, ImVec2(x0 + 27 - gw * 0.5f, sy + 15.0f), PAL.accentInk, grade);
-            // Stats
-            char sb[200];
-            snprintf(sb, sizeof(sb), "%s  |  平均 %.0f fps  |  最快：%s（%.0f）  |  最慢：%s（%.0f）",
-                     grade_desc, avg,
-                     g_bench_sweep.rows[best_i].label, mx,
-                     g_bench_sweep.rows[worst_i].label, mn);
-            text_at(dl, g_mono, 11.5f, ImVec2(x0 + 56, sy + 10.0f), PAL.scrText, sb);
-            text_at(dl, g_mono_sm, 9.5f, ImVec2(x0 + 56, sy + 30.0f), PAL.scrMuted,
-                    "评级基于全部已完成测试的平均帧率，仅反映本机容器环境，不同设备和驱动版本结果不同。");
-            listTop = sy + 60.0f;
+            dl->AddRect(ImVec2(x0, sy), ImVec2(x0 + availW, sy + panelH), PAL.scrLine, 8.0f, 0, 1.0f);
+
+            char sb[256];
+            snprintf(sb, sizeof(sb), "完成 %d 项    中位 %.0f fps    最快：%s (%.0f)    最慢：%s (%.0f)",
+                     cnt, med,
+                     g_bench_sweep.rows[best_i].label, best_v,
+                     g_bench_sweep.rows[worst_i].label, worst_v);
+            // Clip so a long "最快/最慢" label can't spill out of the card.
+            dl->PushClipRect(ImVec2(x0 + 12.0f, sy + 4.0f),
+                             ImVec2(x0 + availW - 10.0f, sy + 26.0f), true);
+            text_at(dl, g_mono, 11.5f, ImVec2(x0 + 12.0f, sy + 10.0f), PAL.scrText, sb);
+            dl->PopClipRect();
+
+            dl->PushClipRect(ImVec2(x0 + 12.0f, sy + 26.0f),
+                             ImVec2(x0 + availW - 10.0f, sy + panelH - 4.0f), true);
+            text_at(dl, g_mono_sm, 9.5f, ImVec2(x0 + 12.0f, sy + 30.0f), PAL.scrMuted,
+                    "各项测试负载不同（部分锁定垂直同步），帧率只适合本机前后对比，不能跨设备打分。");
+            dl->PopClipRect();
+            listTop = sy + panelH + 8.0f;
         }
     }
 
@@ -2581,9 +2609,18 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
                       g_disk_defeat ? "真实闪存" : "快速", g_disk_defeat, st != TQ_RUNNING))
         g_disk_defeat = !g_disk_defeat;
     bx += 102.0f;
-    if (screen_button("##drun", ImVec2(bx, cy), ImVec2(64, 26),
-                      st == TQ_RUNNING ? "..." : "运行", true, st != TQ_RUNNING) && st != TQ_RUNNING)
+    if (st == TQ_RUNNING) {
+        // Cancel instead of a dead disabled button: a real-flash run writes
+        // multi-GB files, and closing the app mid-run used to leave them behind.
+        if (screen_button("##dcancel", ImVec2(bx, cy), ImVec2(64, 26), "取消", false, true))
+            g_disk_prog.cancel = 1;
+        if (g_disk_prog.cancel)
+            snprintf(g_disk_cleanup_msg, sizeof(g_disk_cleanup_msg),
+                     "已取消，当前阶段结束后清理临时文件。");
+    } else if (screen_button("##drun", ImVec2(bx, cy), ImVec2(64, 26), "运行", true, true)) {
+        g_disk_cleanup_msg[0] = '\0';
         disk_run_kick();
+    }
     // right cluster
     float rcx = x0 + availW;
     if (screen_button("##dclear", ImVec2(rcx - 110.0f, cy), ImVec2(110, 26), "清除临时文件", false,
@@ -2613,9 +2650,10 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
         ImGui::PushTextWrapPos(360.0f);
         ImGui::TextUnformatted(
             "对临时文件执行顺序+随机4K读写测试，以十进制MB/s和IOPS报告结果"
-            "（与CPDT标准一致）。真实闪存模式会在每次读取前写入一次内存大小的缓存清除数据，"
-            "确保读取速度反映真实存储性能，而非操作系统页缓存。写入始终为真实速度（每次操作后flush）。"
-            "测试会临时写入数GB数据，完成后自动删除。");
+            "（与CPDT标准一致）。真实闪存模式会在每次读取前写入一份缓存清除数据"
+            "（上限 2048 MB，减轻容器 C: 盘压力），尽量把测试文件挤出操作系统页缓存，"
+            "让读取速度反映存储而不是内存。写入始终是真实速度（每次操作后 flush）。"
+            "运行中可以点“取消”，临时文件会被清理；万一应用被强行关掉，下次启动会自动清理残留。");
         ImGui::PopTextWrapPos();
         ImGui::EndPopup();
     }
@@ -2691,7 +2729,7 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
     float noteY = ty + 2 * (tileH + gap) + 6.0f;
     if (running)
         text_at(dl, g_mono_sm, 10.0f, ImVec2(x0, noteY), PAL.scrMuted,
-                "实时模式：每个阶段运行时即时更新；会写入数 GB 临时数据，测完自动删除。");
+                "实时模式：每个阶段运行时即时更新；会写入数 GB 临时数据（缓存清除上限 2048 MB），测完或取消后自动删除。");
     else if (g_disk_cleanup_msg[0])
         text_at(dl, g_mono_sm, 10.0f, ImVec2(x0, noteY), PAL.scrMuted, g_disk_cleanup_msg);
     else if (!have)
@@ -2981,7 +3019,7 @@ static void menu_row(const Test *t, const char *group, float w) {
     float fpsRight = mx.x - 10.0f;
     if (t->fps) {
         char fb[16];
-        snprintf(fb, sizeof(fb), "%d fps", t->fps);
+        snprintf(fb, sizeof(fb), "参考 %d fps", t->fps);
         float fw = text_w(g_mono, 10.5f, fb);
         text_at(dl, g_mono, 10.5f, ImVec2(mx.x - fw - 10.0f, cy - 5.5f), PAL.muted, fb);
         fpsRight = mx.x - fw - 10.0f;
@@ -3013,7 +3051,7 @@ static void menu_tile(const Test *t, const char *group, float x, float y, float 
     if (sel) bold_at(dl, g_ui, 12.5f, ImVec2(p.x + 12.0f, p.y + 10.0f), PAL.text, t->name);
     else text_at(dl, g_ui, 12.5f, ImVec2(p.x + 12.0f, p.y + 10.0f), PAL.text, t->name);
     char sub[24];
-    if (t->fps) snprintf(sub, sizeof(sub), "%d fps", t->fps);
+    if (t->fps) snprintf(sub, sizeof(sub), "参考 %d fps", t->fps);
     else snprintf(sub, sizeof(sub), "%s", t->api);
     text_at(dl, g_mono, 10.0f, ImVec2(p.x + 12.0f, p.y + CARDH - 18.0f), PAL.muted, sub);
     if (clicked) { g_sel = t; g_sel_group = group; }

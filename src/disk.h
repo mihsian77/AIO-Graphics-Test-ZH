@@ -60,6 +60,7 @@ typedef struct {
     volatile long phase;         // AIO_DISK_PHASE_*
     volatile long phase_x1000;   // within-phase progress, 0..1000 (fixed point)
     volatile long overall_x1000; // whole-run progress, 0..1000
+    volatile long cancel;        // set to 1 by the UI to abort the run early
     double cur_mbps;             // partial MB/s of the phase in flight
     double seq_write_mbps;       // per-phase results, filled as each completes
     double seq_read_mbps;

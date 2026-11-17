@@ -77,6 +77,10 @@ void aio_hdr_begin_frame(const AioHdrHost *h);
 void aio_hdr_draw_ui(ImDrawList *dl, ImVec2 o, float w, float h, float fps, bool fullscreen,
                      const AioHdrFonts *fonts);
 
+// Flip the diagnostic panel colours to match the shell's light/dark theme.
+// dark = 0 for the light theme. The test card itself stays black in both.
+void aio_hdr_set_theme(int dark);
+
 // After ImGui::Render, instead of the shell's normal clear + ImGui draw: draws the
 // card into the back buffer, then the ImGui frame (composited for HDR). The shell
 // Presents afterwards with vsync.

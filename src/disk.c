@@ -48,6 +48,10 @@
 
 #include "disk.h"
 
+// Set as `err` when the UI asked to stop: the temp files are still deleted below,
+// so a cancelled run never leaves multi-GB files behind.
+#define DISK_CANCELLED "已取消：临时文件已清理。"
+
 #define DISK_BLOCK    (4u * 1024u * 1024u)  // sequential block: 4 MiB (CPDT bigBlock)
 #define DISK_RAND_SZ  4096u                  // random read/write size: 4 KiB (CPDT smallBlock)
 #define DISK_RAND_SECS 7.0                    // CPDT runs each random test for a fixed 7 s window
@@ -103,6 +107,7 @@ static int write_file_blocks(const char *path, uint64_t bytes, const void *buf,
     int ok = 1;
     uint64_t done = 0;
     for (uint64_t off = 0; off < bytes; off += DISK_BLOCK) {
+        if (prog && prog->cancel) { ok = 0; break; }
         DWORD wrote = 0;
         if (!WriteFile(h, buf, DISK_BLOCK, &wrote, NULL) || wrote != DISK_BLOCK) { ok = 0; break; }
         done += DISK_BLOCK;
@@ -183,6 +188,7 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
     // block. Capped so test + buster + a 512 MiB margin still fit in free space.
     uint64_t buster_bytes = 0;
     int buster_short = 0;  // had to shrink the buster (read may be partly cached)
+    int buster_capped = 0; // shrank because of the size cap, not because space ran out
     if (defeat_cache && ram > 0) {
         buster_bytes = ram + ram / 10;
         buster_bytes -= buster_bytes % DISK_BLOCK;
@@ -190,7 +196,7 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
         // the Winlator container's C: drive. 2 GiB is enough to evict most phone
         // page caches without risking disk-full on a fixed-size container image.
         const uint64_t BUSTER_CAP = 2ull * 1024 * 1024 * 1024;
-        if (buster_bytes > BUSTER_CAP) { buster_bytes = BUSTER_CAP; buster_short = 1; }
+        if (buster_bytes > BUSTER_CAP) { buster_bytes = BUSTER_CAP; buster_short = 1; buster_capped = 1; }
         uint64_t margin = 512ull * 1024 * 1024;
         if (freeb.QuadPart > 0 && total + buster_bytes + margin > freeb.QuadPart) {
             uint64_t avail = (freeb.QuadPart > total + margin) ? freeb.QuadPart - total - margin : 0;
@@ -235,6 +241,7 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
         } else {
             double t0 = now_sec(freq);
             for (uint64_t b = 0; b < nblocks && !err; b++) {
+                if (prog && prog->cancel) { err = DISK_CANCELLED; break; }
                 DWORD wrote = 0;
                 if (!WriteFile(h, buf, DISK_BLOCK, &wrote, NULL) || wrote != DISK_BLOCK)
                     err = "Write failed partway (storage full?).";
@@ -277,6 +284,8 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
     if (!err && defeat_cache && buster_bytes > 0) {
         disk_prog(prog, AIO_DISK_PHASE_BUSTER, 0.0, 0.0, 200, 80);
         if (!write_file_blocks(buster, buster_bytes, buf, prog, 200, 80)) {
+            // Cancelled mid-buster: abort the run instead of falling back.
+            if (prog && prog->cancel) err = DISK_CANCELLED;
             // Non-fatal: if the buster can't be written, fall back to a (cached)
             // read rather than failing the whole run.
             buster_short = 1;
@@ -296,6 +305,7 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
         } else {
             double t0 = now_sec(freq);
             for (uint64_t b = 0; b < nblocks && !err; b++) {
+                if (prog && prog->cancel) { err = DISK_CANCELLED; break; }
                 DWORD got = 0;
                 if (!ReadFile(h, buf, DISK_BLOCK, &got, NULL) || got != DISK_BLOCK)
                     err = "Read failed partway.";
@@ -323,8 +333,10 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
     if (prog) { prog->seq_read_mbps = read_mbps; disk_prog(prog, AIO_DISK_PHASE_SEQ_READ, 1.0, read_mbps, 280, 170); }
     if (!err && defeat_cache && buster_bytes > 0) {
         disk_prog(prog, AIO_DISK_PHASE_BUSTER, 0.0, 0.0, 450, 70);
-        if (!write_file_blocks(buster, buster_bytes, buf, prog, 450, 70))
-            buster_short = 1;  // second flush failed: random read may read cached
+        if (!write_file_blocks(buster, buster_bytes, buf, prog, 450, 70)) {
+            if (prog && prog->cancel) err = DISK_CANCELLED;
+            else buster_short = 1;  // second flush failed: random read may read cached
+        }
     }
 
     // ---- Random 4 KB read (cold off buster #2 in real-flash mode) ----------
@@ -342,6 +354,7 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
             } else {
                 double t0 = now_sec(freq);
                 for (uint64_t i = 0; i < plan_n && !err; i++) {
+                    if (prog && prog->cancel) { err = DISK_CANCELLED; break; }
                     LARGE_INTEGER li;
                     li.QuadPart = (LONGLONG)plan[i];
                     if (!SetFilePointerEx(h, li, NULL, FILE_BEGIN)) { err = "Seek failed."; break; }
@@ -396,6 +409,7 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
             } else {
                 double t0 = now_sec(freq);
                 for (uint64_t i = 0; i < plan_n && !err; i++) {
+                    if (prog && prog->cancel) { err = DISK_CANCELLED; break; }
                     LARGE_INTEGER li;
                     li.QuadPart = (LONGLONG)plan[i];
                     if (!SetFilePointerEx(h, li, NULL, FILE_BEGIN)) { err = "Seek failed."; break; }
@@ -457,6 +471,13 @@ char *aio_disk_run_ex2(int size_mb, int defeat_cache, aio_disk_progress_fn progr
                      "from the OS page cache, so seq + random read reflect storage, not RAM.\r\n"
                      "Random write is per-op flushed (committed-write speed).",
                      (unsigned long long)(buster_bytes / (1024 * 1024)), ram_gb);
+        else if (buster_capped)
+            snprintf(note, sizeof(note),
+                     "Mode: real flash (PARTIAL). The cache-buster is capped at 2048 MiB on purpose\r\n"
+                     "to keep the container's C: drive from filling up (device RAM ~= %.1f GB).\r\n"
+                     "With RAM this size the reads may still be partly cache-served, so treat\r\n"
+                     "read figures as a lower bound. Writes are always real.",
+                     ram_gb);
         else
             snprintf(note, sizeof(note),
                      "Mode: real flash (PARTIAL). Not enough free space to write a full\r\n"
