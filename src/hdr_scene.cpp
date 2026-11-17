@@ -80,22 +80,9 @@ const ImU32 C_ACCENT = IM_COL32(47, 214, 195, 255);
 ImU32 C_PANEL = IM_COL32(9, 13, 18, 240);
 ImU32 C_LINE = IM_COL32(255, 255, 255, 34);
 
-// Called by the shell whenever the theme flips. The HDR card is black in both
-// themes (it has to be, to show the pattern), but the values panel around it used
-// to stay near-black even in the light theme.
-void aio_hdr_set_theme(int dark) {
-    if (dark) {
-        C_TEXT  = IM_COL32(236, 242, 248, 255);
-        C_MUTED = IM_COL32(150, 164, 180, 255);
-        C_PANEL = IM_COL32(9, 13, 18, 240);
-        C_LINE  = IM_COL32(255, 255, 255, 34);
-    } else {
-        C_TEXT  = IM_COL32(20, 27, 35, 255);
-        C_MUTED = IM_COL32(91, 103, 117, 255);
-        C_PANEL = IM_COL32(255, 255, 255, 242);
-        C_LINE  = IM_COL32(0, 0, 0, 46);
-    }
-}
+// Theme switch lives outside the anonymous namespace so the shell can link to it;
+// the colour globals above are still visible here (unnamed namespace names are
+// usable for the rest of the translation unit). See the definition at end of file.
 
 // ---------------------------------------------------------------------------
 // Shaders (compiled at runtime through the shell's lazy D3DCompile shim).
@@ -2163,4 +2150,21 @@ void aio_hdr_render(const AioHdrHost *h, ImDrawData *draw_data) {
     ctx->PSSetShaderResources(0, 1, &nullsrv);
     ctx->OMSetBlendState(nullptr, nullptr, 0xffffffff);
     ctx->OMSetRenderTargets(0, nullptr, nullptr);
+}
+
+// Called by the shell whenever the theme flips. The HDR card stays black in both
+// themes (it has to be, to show the pattern), but the values panel around it used
+// to stay near-black even in the light theme.
+void aio_hdr_set_theme(int dark) {
+    if (dark) {
+        C_TEXT  = IM_COL32(236, 242, 248, 255);
+        C_MUTED = IM_COL32(150, 164, 180, 255);
+        C_PANEL = IM_COL32(9, 13, 18, 240);
+        C_LINE  = IM_COL32(255, 255, 255, 34);
+    } else {
+        C_TEXT  = IM_COL32(20, 27, 35, 255);
+        C_MUTED = IM_COL32(91, 103, 117, 255);
+        C_PANEL = IM_COL32(255, 255, 255, 242);
+        C_LINE  = IM_COL32(0, 0, 0, 46);
+    }
 }
