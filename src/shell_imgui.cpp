@@ -472,7 +472,10 @@ static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // HTCAPTION so native dragging works under Wine/WS_POPUP.
             LRESULT hit = DefWindowProc(hwnd, msg, wp, lp);
             if (hit == HTCLIENT && g_is_wine) {
-                POINT pt = { LOWORD(lp), HIWORD(lp) };
+                // GET_X/Y_LPARAM semantics: screen coords go negative once the
+                // window is dragged off the left/top edge; unsigned LOWORD
+                // wraps them and the caption hit-test silently stops working.
+                POINT pt = { (SHORT)LOWORD(lp), (SHORT)HIWORD(lp) };
                 ScreenToClient(hwnd, &pt);
                 RECT rc; GetClientRect(hwnd, &rc);
                 // Title bar strip: top 56px (generous for touch + 1.5x font scale).
@@ -1461,14 +1464,22 @@ static void draw_titlebar(ImDrawList *dl, ImVec2 o, float w, float h) {
         if (dragW > 10.0f) {
             ImGui::SetCursorScreenPos(ImVec2(dragX, o.y));
             ImGui::PushID("##titledrag");
-            bool clk = ImGui::InvisibleButton("drag", ImVec2(dragW, h));
+            ImGui::InvisibleButton("drag", ImVec2(dragW, h));
+            // InvisibleButton returns true on RELEASE, IsMouseClicked(0) only
+            // on the press frame - the old "clk && IsMouseClicked" never held,
+            // so the manual drag never started (native Windows has no caption
+            // bar to fall back on). IsItemActivated is true on the press frame.
+            bool act = ImGui::IsItemActivated();
+            bool hov = ImGui::IsItemHovered();
             bool dbl = ImGui::IsMouseDoubleClicked(0);
             ImGui::PopID();
-            if (clk && ImGui::IsMouseClicked(0)) {
+            if (act) {
                 g_win_dragging = true;
                 GetCursorPos(&g_win_drag_mouse);
                 GetWindowRect(g_shell_hwnd, &g_win_drag_rect);
-            } else if (dbl && ImGui::IsItemHovered()) {
+            }
+            if (dbl && hov) {
+                g_win_dragging = false;
                 ShowWindow(g_shell_hwnd, IsZoomed(g_shell_hwnd) ? SW_RESTORE : SW_MAXIMIZE);
             }
         }
