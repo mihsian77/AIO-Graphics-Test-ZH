@@ -2087,34 +2087,45 @@ static void dp_header(ImDrawList *dl, ImVec2 p, const char *s) {
     caps_at(dl, g_mono_sm, 11.0f, p, PAL.scrMuted, s, 2.0f);
 }
 
+// Shrink to fit down to 9.5pt (CJK gets mushy below that), then ellipsise.
+// Never cuts a UTF-8 sequence in half. Returns the size used; *out points to
+// s when it fits, otherwise to the truncated copy in buf.
+static float fit_text(ImFont *f, const char *s, float avail, char *buf, size_t cap, const char **out) {
+    float ps = 11.5f;
+    while (ps > 9.5f && text_w(f, ps, s) > avail) ps -= 0.5f;
+    if (text_w(f, ps, s) <= avail) { *out = s; return ps; }
+    size_t n = strlen(s);
+    if (n >= cap) n = cap - 1;
+    memcpy(buf, s, n);
+    buf[n] = 0;
+    float ew = text_w(f, ps, "…");
+    while (n > 0 && text_w(f, ps, buf) > avail - ew) {
+        do { --n; } while (n > 0 && ((unsigned char)buf[n] & 0xC0) == 0x80);
+        buf[n] = 0;
+    }
+    strncat(buf, "…", cap - strlen(buf) - 1);
+    *out = buf;
+    return ps;
+}
+
 // One key/value data row inside a card (mockup .dp-row). `vc` overrides value color.
 static void dp_row(ImDrawList *dl, float x, float y, float w, const char *k, const char *v,
                    ImU32 vc, bool zebra) {
     if (zebra) dl->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + 24.0f), IM_COL32(255, 255, 255, 5), 0);
-    text_at(dl, g_mono, 11.5f, ImVec2(x + 13.0f, y + 6.0f), PAL.scrMuted, k);
-    // Shrink to fit, but stop at 9.5pt: CJK gets mushy below that, so anything
-    // still too wide is ellipsised instead of shrunk into an unreadable smear.
-    float avail = w - text_w(g_mono, 11.5f, k) - 30.0f;
-    if (avail < 80.0f) avail = w - 80.0f;
-    float ps = 11.5f;
-    while (ps > 9.5f && text_w(g_mono, ps, v) > avail) ps -= 0.5f;
-    float vw = text_w(g_mono, ps, v);
-    if (vw > avail) {
-        char buf[192];
-        size_t n = strlen(v);
-        if (n >= sizeof(buf)) n = sizeof(buf) - 1;
-        memcpy(buf, v, n);
-        buf[n] = 0;
-        while (n > 0 && text_w(g_mono, ps, buf) > avail - text_w(g_mono, ps, "…")) {
-            // Drop one byte at a time, but never cut a UTF-8 sequence in half.
-            do { --n; } while (n > 0 && ((unsigned char)buf[n] & 0xC0) == 0x80);
-            buf[n] = 0;
-        }
-        strncat(buf, "…", sizeof(buf) - strlen(buf) - 1);
-        v = buf;
-        vw = text_w(g_mono, ps, v);
-    }
-    text_at(dl, g_mono, ps, ImVec2(x + w - vw - 13.0f, y + (24.0f - ps) * 0.5f), vc, v);
+    // Key gets the same shrink/ellipsis treatment as the value: the bilingual
+    // feature labels ("fragmentStoresAndAtomics（片段原子操作）" ~304px at 1.5x)
+    // overflowed narrow columns and overlapped the value. Reserve 100px for
+    // value + margins so the two can never collide.
+    char kbuf[192];
+    const char *kk;
+    float kps = fit_text(g_mono, k, w - 100.0f, kbuf, sizeof(kbuf), &kk);
+    text_at(dl, g_mono, kps, ImVec2(x + 13.0f, y + (24.0f - kps) * 0.5f), PAL.scrMuted, kk);
+    float avail = w - text_w(g_mono, kps, kk) - 30.0f;
+    char vbuf[192];
+    const char *vv;
+    float ps = fit_text(g_mono, v, avail, vbuf, sizeof(vbuf), &vv);
+    float vw = text_w(g_mono, ps, vv);
+    text_at(dl, g_mono, ps, ImVec2(x + w - vw - 13.0f, y + (24.0f - ps) * 0.5f), vc, vv);
 }
 
 // GPU Info: two-column Vulkan | OpenGL instrument cards.
@@ -3026,10 +3037,19 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
         char vbuf[128];
         float vw = text_w(g_mono, 12.0f, v);
         if (vw > avail) {
+            // UTF-8-safe truncation: the old byte-wise --n loop cut CJK chars
+            // in half (e.g. "核" in "…(8核)"), which ImGui decodes as U+FFFD
+            // and renders as tofu. Skip continuation bytes like dp_row does.
             size_t n = strlen(v);
-            while (n > 0 && text_w(g_mono, 12.0f, (snprintf(vbuf, sizeof(vbuf), "%.*s…", (int)n, v), vbuf)) > avail)
-                --n;
-            snprintf(vbuf, sizeof(vbuf), "%.*s…", (int)n, v);
+            if (n >= sizeof(vbuf)) n = sizeof(vbuf) - 1;
+            memcpy(vbuf, v, n);
+            vbuf[n] = 0;
+            float ew = text_w(g_mono, 12.0f, "…");
+            while (n > 0 && text_w(g_mono, 12.0f, vbuf) > avail - ew) {
+                do { --n; } while (n > 0 && ((unsigned char)vbuf[n] & 0xC0) == 0x80);
+                vbuf[n] = 0;
+            }
+            strncat(vbuf, "…", sizeof(vbuf) - strlen(vbuf) - 1);
             v = vbuf;
             vw = text_w(g_mono, 12.0f, v);
         }
