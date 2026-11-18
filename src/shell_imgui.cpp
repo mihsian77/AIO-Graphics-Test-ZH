@@ -3000,7 +3000,11 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     Cell cells[] = {
         {"分辨率", resbuf, false},
         {"呈现模式", present_v, false},
-        {"转换路径", g_sel->path ? g_sel->path : "-", true},
+        // The path string is a per-row constant from the test table, not something
+        // probed at runtime (on a plain Wine prefix D3D11 goes through wined3d ->
+        // OpenGL, but the row still says DXVK -> Turnip). Label it as an expectation
+        // so it does not read as measured fact.
+        {"预期路径", g_sel->path ? g_sel->path : "-", true},
         {"GPU", gpu_v, false},
         {"CPU", cpu_buf, false},
     };
