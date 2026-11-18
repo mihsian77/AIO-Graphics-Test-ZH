@@ -3036,12 +3036,28 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // bound, so a long CPU brand ran past the pane and landed on the watermark.
     const float stripR = mx.x - 6.0f;
     dl->PushClipRect(ImVec2(o.x, sy), ImVec2(stripR, mx.y), true);
+    // Pre-measure the natural widths. When the strip is too narrow for all five
+    // cells, 「呈现模式」 is dropped first: the same vsync state is already on the
+    // top bar and in the viewport FPS readout, while the CPU model is only shown
+    // here. Dropping it keeps the CPU cell readable instead of hiding it.
+    float kwPre[5];
+    bool dropPresent = false;
+    {
+        float need = 0.0f;
+        for (int i = 0; i < 5; ++i) {
+            kwPre[i] = caps_at(dl, g_mono, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
+            float vw = text_w(g_mono, 12.0f, cells[i].v);
+            need += (kwPre[i] > vw ? kwPre[i] : vw) + 22.0f;
+        }
+        dropPresent = (need > stripR - cx);
+    }
     for (int i = 0; i < 5; ++i) {
+        if (dropPresent && i == 1) continue;
         // Measure the key before drawing it. The old loop drew the key, then bailed
         // at avail < 24px, which left "CPU" plus a single glyph and an ellipsis on
         // narrow windows — a label with nothing readable under it. A cell now needs
         // room for its key plus a few characters of value, otherwise it is skipped.
-        float kw = caps_at(dl, g_mono, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
+        float kw = kwPre[i];
         float avail = stripR - cx;
         if (avail < kw + 44.0f) break;
         caps_at(dl, g_mono, 9.0f, ImVec2(cx, cellY), PAL.scrMuted, cells[i].k, 1.5f);
