@@ -3037,14 +3037,18 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     const float stripR = mx.x - 6.0f;
     dl->PushClipRect(ImVec2(o.x, sy), ImVec2(stripR, mx.y), true);
     for (int i = 0; i < 5; ++i) {
+        // Measure the key before drawing it. The old loop drew the key, then bailed
+        // at avail < 24px, which left "CPU" plus a single glyph and an ellipsis on
+        // narrow windows — a label with nothing readable under it. A cell now needs
+        // room for its key plus a few characters of value, otherwise it is skipped.
+        float kw = caps_at(dl, g_mono, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
+        float avail = stripR - cx;
+        if (avail < kw + 44.0f) break;
         caps_at(dl, g_mono, 9.0f, ImVec2(cx, cellY), PAL.scrMuted, cells[i].k, 1.5f);
         ImU32 vc;
         if (cells[i].path) vc = PAL.accentInk;
         else if (i == 3 && gpu_software) vc = PAL.bad;  // red for llvmpipe
         else vc = PAL.scrText;
-        // Truncate the value to whatever is left; a cell that cannot fit is dropped.
-        float avail = stripR - cx;
-        if (avail < 24.0f) break;
         const char *v = cells[i].v;
         char vbuf[128];
         float vw = text_w(g_mono, 12.0f, v);
@@ -3066,7 +3070,6 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
             vw = text_w(g_mono, 12.0f, v);
         }
         text_at(dl, g_mono, 12.0f, ImVec2(cx, cellY + 13.0f), vc, v);
-        float kw = caps_at(dl, g_mono, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
         float cw = (kw > vw ? kw : vw);
         cx += cw + 22.0f;
         if (i < 4) {
