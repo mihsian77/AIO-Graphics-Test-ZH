@@ -2407,8 +2407,13 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
     }
 
     // Scrolling row list that FILLS the remaining pane height (fix 3: no dead space).
+    // Clamp to a positive height: a negative ImVec2.y makes BeginChild read as
+    // "parent height minus |y|", which collapses the list when the summary panel
+    // pushes listTop past the pane bottom on a very short window.
+    float listH = (base.y + h) - listTop - 8.0f;
+    if (listH < 48.0f) listH = 48.0f;
     ImGui::SetCursorScreenPos(ImVec2(base.x, listTop));
-    ImGui::BeginChild("##benchrows", ImVec2(w, (base.y + h) - listTop - 8.0f), false, ImGuiWindowFlags_NoBackground);
+    ImGui::BeginChild("##benchrows", ImVec2(w, listH), false, ImGuiWindowFlags_NoBackground);
     ImDrawList *ldl = ImGui::GetWindowDrawList();
     ImVec2 lb = ImGui::GetCursorScreenPos();
     float rx0 = lb.x + pad, ry = lb.y + 4.0f;
