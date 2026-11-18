@@ -2652,18 +2652,26 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
             free(rep);
         }
     }
-    ImGui::SetCursorScreenPos(ImVec2(rcx - 110.0f - 120.0f, cy));
-    ImGui::PushID("##dhelp");
-    bool helpClk = ImGui::InvisibleButton("h", ImVec2(112, 26));
-    bool helpHov = ImGui::IsItemHovered();
-    ImGui::PopID();
-    if (st != TQ_RUNNING) {
-        ImVec2 hp(rcx - 110.0f - 120.0f, cy);
-        dl->AddRect(hp, ImVec2(hp.x + 112, hp.y + 26), PAL.scrLine, 7.0f, 0, 1.0f);
-        text_at(dl, g_ui, 12.0f, ImVec2(hp.x + 12.0f, hp.y + 7.0f), helpHov ? PAL.accentInk : PAL.scrMuted,
-                "这是什么？");
+    // Right cluster: clear-temp button plus a small help dot when there is room.
+    // Both used to be pinned at fixed offsets, and the 112px help box landed on top
+    // of the 运行 button once the pane got narrow (phone container ~620px). Its
+    // invisible button took the clicks, so 运行 looked dead: no test ever started.
+    // Positions are now derived from the run button's right edge, and the help dot
+    // is dropped when the pane cannot fit it.
+    float runEnd = bx + 64.0f;
+    float clearX = rcx - 110.0f;
+    float helpX = clearX - 34.0f;
+    if (helpX >= runEnd + 8.0f && st != TQ_RUNNING) {
+        ImGui::SetCursorScreenPos(ImVec2(helpX, cy));
+        ImGui::PushID("##dhelp");
+        bool helpClk = ImGui::InvisibleButton("h", ImVec2(26, 26));
+        bool helpHov = ImGui::IsItemHovered();
+        ImGui::PopID();
+        ImU32 hc = helpHov ? PAL.accentInk : PAL.scrLine;
+        dl->AddRect(ImVec2(helpX, cy), ImVec2(helpX + 26.0f, cy + 26.0f), hc, 7.0f, 0, 1.0f);
+        text_at(dl, g_ui, 12.0f, ImVec2(helpX + 9.0f, cy + 7.0f), hc, "?");
+        if (helpClk) ImGui::OpenPopup("##diskhelp");
     }
-    if (helpClk) ImGui::OpenPopup("##diskhelp");
     if (ImGui::BeginPopup("##diskhelp")) {
         ImGui::PushTextWrapPos(360.0f);
         ImGui::TextUnformatted(
@@ -2997,18 +3005,32 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
         {"CPU", cpu_buf, false},
     };
     float cx = o.x + 14.0f, cellY = mx.y - 34.0f;
-    // Clip the cells so a long brand string can never bleed into the watermark.
-    float clipR = mx.x - 190.0f;
-    dl->PushClipRect(ImVec2(o.x, sy), ImVec2(clipR, mx.y), true);
+    // Clamp to the strip's own width. The cells used to be laid out with no upper
+    // bound, so a long CPU brand ran past the pane and landed on the watermark.
+    const float stripR = mx.x - 6.0f;
+    dl->PushClipRect(ImVec2(o.x, sy), ImVec2(stripR, mx.y), true);
     for (int i = 0; i < 5; ++i) {
         caps_at(dl, g_mono, 9.0f, ImVec2(cx, cellY), PAL.scrMuted, cells[i].k, 1.5f);
         ImU32 vc;
         if (cells[i].path) vc = PAL.accentInk;
         else if (i == 3 && gpu_software) vc = PAL.bad;  // red for llvmpipe
         else vc = PAL.scrText;
-        text_at(dl, g_mono, 12.0f, ImVec2(cx, cellY + 13.0f), vc, cells[i].v);
+        // Truncate the value to whatever is left; a cell that cannot fit is dropped.
+        float avail = stripR - cx;
+        if (avail < 24.0f) break;
+        const char *v = cells[i].v;
+        char vbuf[128];
+        float vw = text_w(g_mono, 12.0f, v);
+        if (vw > avail) {
+            size_t n = strlen(v);
+            while (n > 0 && text_w(g_mono, 12.0f, (snprintf(vbuf, sizeof(vbuf), "%.*s…", (int)n, v), vbuf)) > avail)
+                --n;
+            snprintf(vbuf, sizeof(vbuf), "%.*s…", (int)n, v);
+            v = vbuf;
+            vw = text_w(g_mono, 12.0f, v);
+        }
+        text_at(dl, g_mono, 12.0f, ImVec2(cx, cellY + 13.0f), vc, v);
         float kw = caps_at(dl, g_mono, 9.0f, ImVec2(-9999, -9999), PAL.scrMuted, cells[i].k, 1.5f);
-        float vw = text_w(g_mono, 12.0f, cells[i].v);
         float cw = (kw > vw ? kw : vw);
         cx += cw + 22.0f;
         if (i < 4) {
