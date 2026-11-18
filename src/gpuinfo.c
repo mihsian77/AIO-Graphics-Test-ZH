@@ -337,9 +337,13 @@ void aio_gpuinfo_query_vk(AioVkInfo *out) {
         // keep "Adreno 740".
         if (strstr(d, "Adreno") || strstr(d, "adreno")) {
             char clean[256];
-            const char *a = strstr(d, "dreno");
+            // Match the full word so a name starting with "Adreno" (Qualcomm
+            // proprietary driver: "Adreno (TM) 740") does not back up before
+            // the buffer. The old strstr("dreno")-2 read device[-1] and the
+            // %s copy came out empty.
+            const char *a = strstr(d, "Adreno");
+            if (!a) a = strstr(d, "adreno");
             if (a) {
-                a -= 2;  // back up to "Adreno"
                 snprintf(clean, sizeof(clean), "%s", a);
                 // Remove "(TM)" and "(R)" anywhere, collapse double spaces.
                 for (;;) {
