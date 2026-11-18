@@ -2491,7 +2491,10 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
     }
     ry += 8.0f;
 
-    // Summary: average FPS, best test, score.
+    // Per-row results summary (covers individual runs too). Plain stats only:
+    // the old 0-100 "综合评分" (avg/30) survived the letter-grade removal and
+    // contradicted the sweep panel's "不能跨设备打分" disclaimer - with vsync
+    // on/off dominating the average, the score measured nothing about the GPU.
     {
         float sum = 0.0f; int cnt = 0; int best_i = -1;
         for (int i = 0; i < g_nbrows; ++i) {
@@ -2502,14 +2505,10 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
         }
         if (cnt > 0) {
             float avg = sum / cnt;
-            // Score: 0-100, scaled so 3000fps ≈ 100, 60fps ≈ 2.
-            int score = (int)(avg / 30.0f + 0.5f);
-            if (score > 100) score = 100; if (score < 1) score = 1;
             char sbuf[160];
-            snprintf(sbuf, sizeof(sbuf), "已完成 %d 项测试  ·  平均 %.0f fps  ·  最快: %s %.0f fps  ·  综合评分: %d/100",
-                     cnt, avg, g_brows[best_i].label, g_brows[best_i].avg, score);
-            ImU32 sc = score >= 80 ? PAL.good : (score >= 40 ? PAL.warn : PAL.bad);
-            text_at(ldl, g_mono, 11.0f, ImVec2(rx0, ry), sc, sbuf);
+            snprintf(sbuf, sizeof(sbuf), "已完成 %d 项测试  ·  平均 %.0f fps  ·  最快: %s %.0f fps",
+                     cnt, avg, g_brows[best_i].label, g_brows[best_i].avg);
+            text_at(ldl, g_mono, 11.0f, ImVec2(rx0, ry), PAL.scrText, sbuf);
             ry += 18.0f;
         }
     }
