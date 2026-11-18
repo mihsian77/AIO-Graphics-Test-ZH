@@ -1747,19 +1747,32 @@ void draw_values(ImDrawList *dl, float X0, float Y0, float X1, float Y1, float s
         // Interactive hit area (wider than visual)
         ImGui::SetCursorScreenPos(ImVec2(sb_x - 6.0f * s, cy0));
         ImGui::InvisibleButton("##hdrvalsb", ImVec2(sb_w + 12.0f * s, view_h));
-        if (ImGui::IsItemActive()) {
+        // Grab-offset drag: on activation, a press on the thumb remembers where
+        // inside it landed; a press on the track pages once and grabs the thumb
+        // centre. The old delta-based branch treated the zero-delta first frame
+        // (or holding the thumb still) as a track click and jumped the scroll.
+        static float sb_grab = -1.0f;
+        float span = track - thumb;
+        if (span < 1.0f) span = 1.0f;
+        if (ImGui::IsItemActivated()) {
             float my = io.MousePos.y;
-            if (io.MouseDelta.y != 0.0f && my >= ty && my <= ty + thumb) {
-                // Drag thumb
-                S.scroll += io.MouseDelta.y * (content_h / track);
+            if (my >= ty && my <= ty + thumb) {
+                sb_grab = my - ty;
             } else {
-                // Click on track: page toward click point
-                float frac = (my - cy0 - thumb * 0.5f) / (track - thumb);
+                sb_grab = thumb * 0.5f;
+                float frac = (my - cy0 - sb_grab) / span;
                 if (frac < 0.0f) frac = 0.0f;
                 if (frac > 1.0f) frac = 1.0f;
                 S.scroll = frac * max_scroll;
             }
         }
+        if (ImGui::IsItemActive() && sb_grab >= 0.0f) {
+            float frac = (io.MousePos.y - cy0 - sb_grab) / span;
+            if (frac < 0.0f) frac = 0.0f;
+            if (frac > 1.0f) frac = 1.0f;
+            S.scroll = frac * max_scroll;
+        }
+        if (ImGui::IsItemDeactivated()) sb_grab = -1.0f;
         if (S.scroll > max_scroll) S.scroll = max_scroll;
         if (S.scroll < 0.0f) S.scroll = 0.0f;
     }
