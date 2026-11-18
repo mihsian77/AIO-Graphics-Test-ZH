@@ -535,6 +535,10 @@ static bool g_dark = true;
 // follows the theme; g_view_bg/g_view_bg2 are the empty-viewport gradient. Set in
 // apply_theme, which also mirrors g_scene_clear into aio_embed_clear_rgb.
 static float g_scene_clear[3] = {8.0f / 255.0f, 12.0f / 255.0f, 17.0f / 255.0f};
+// Telemetry strip gradient and the shell clear colour, mirrored from the theme in
+// apply_theme. Both were hardcoded dark, which is unreadable in the light theme.
+static float g_clear_rgb[3] = {0.027f, 0.039f, 0.055f};
+static ImU32 g_strip_top = 0, g_strip_bot = 0;
 static ImU32 g_view_bg = 0, g_view_bg2 = 0;
 
 // Per-API chip hues (theme-independent). H_TOOL resolves to the theme accent.
@@ -588,12 +592,21 @@ static void apply_theme(bool dark) {
         g_view_bg = H(0xdfe4ea); g_view_bg2 = H(0xeef2f6);
         g_scene_clear[0] = 0xe6 / 255.0f; g_scene_clear[1] = 0xea / 255.0f; g_scene_clear[2] = 0xef / 255.0f;
     }
+    if (dark) {
+        g_strip_top = IM_COL32(4, 7, 10, 0);    g_strip_bot = IM_COL32(4, 7, 10, 210);
+        g_clear_rgb[0] = 0.027f; g_clear_rgb[1] = 0.039f; g_clear_rgb[2] = 0.055f;
+    } else {
+        g_strip_top = IM_COL32(0xe9, 0xed, 0xf1, 0); g_strip_bot = IM_COL32(0xe9, 0xed, 0xf1, 235);
+        g_clear_rgb[0] = 0xe9 / 255.0f; g_clear_rgb[1] = 0xed / 255.0f; g_clear_rgb[2] = 0xf1 / 255.0f;
+    }
+
     aio_embed_clear_rgb[0] = g_scene_clear[0];
     aio_embed_clear_rgb[1] = g_scene_clear[1];
     aio_embed_clear_rgb[2] = g_scene_clear[2];
-    // HDR keeps a black test card, but its diagnostic panel must follow the theme
-    // (it used to stay near-black in light mode).
-    aio_hdr_set_theme(dark ? 1 : 0);
+    // HDR scene text stays light on its black test card in both themes: the card
+    // must stay black for colour work, so dark text on it is unreadable. (A
+    // light-theme variant was tried and made every label invisible.)
+    aio_hdr_set_theme(1);
 
     ImGuiStyle &s = ImGui::GetStyle();
     if (dark) ImGui::StyleColorsDark(); else ImGui::StyleColorsLight();
@@ -2644,7 +2657,7 @@ static void draw_disk_pane(ImVec2 o, float w, float h) {
     bool helpClk = ImGui::InvisibleButton("h", ImVec2(112, 26));
     bool helpHov = ImGui::IsItemHovered();
     ImGui::PopID();
-    {
+    if (st != TQ_RUNNING) {
         ImVec2 hp(rcx - 110.0f - 120.0f, cy);
         dl->AddRect(hp, ImVec2(hp.x + 112, hp.y + 26), PAL.scrLine, 7.0f, 0, 1.0f);
         text_at(dl, g_ui, 12.0f, ImVec2(hp.x + 12.0f, hp.y + 7.0f), helpHov ? PAL.accentInk : PAL.scrMuted,
@@ -2913,8 +2926,10 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // ---- telemetry strip (bottom) ---- (hidden in fullscreen; HUD stays)
     if (full) return;
     float stripH = 58.0f, sy = mx.y - stripH;
-    dl->AddRectFilledMultiColor(ImVec2(o.x, sy), mx, IM_COL32(4, 7, 10, 0), IM_COL32(4, 7, 10, 0),
-                                IM_COL32(4, 7, 10, 210), IM_COL32(4, 7, 10, 210));
+    // The strip used to be a hardcoded dark gradient while scrText follows the
+    // theme, so in light mode it was dark-on-dark. Fill it from the palette.
+    dl->AddRectFilledMultiColor(ImVec2(o.x, sy), mx, g_strip_top, g_strip_top,
+                                g_strip_bot, g_strip_bot);
     struct Cell { const char *k; const char *v; bool path; };
     char resbuf[24];
     // Live embedded target size (native pixels) when a scene is running, else the rect.
@@ -2962,10 +2977,11 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
     // 60+ chars) to keep the telemetry strip compact.
     if (g_cpuinfo.ok && g_cpuinfo.name[0]) {
         const char *cpu_name = g_cpuinfo.name;
-        // Trim to ~28 chars for the strip; full name is in the GPU Info page.
+        // Full name lives on the GPU Info page; the strip gets a short form. 30 was
+        // still wide enough to run under the version watermark.
         size_t L = strlen(cpu_name);
-        if (L > 30) {
-            snprintf(cpu_buf, sizeof(cpu_buf), "%.27s... (%d核)", cpu_name, g_cpuinfo.cores);
+        if (L > 18) {
+            snprintf(cpu_buf, sizeof(cpu_buf), "%.15s…(%d核)", cpu_name, g_cpuinfo.cores);
         } else {
             snprintf(cpu_buf, sizeof(cpu_buf), "%s (%d核)", cpu_name, g_cpuinfo.cores);
         }
@@ -2981,6 +2997,9 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
         {"CPU", cpu_buf, false},
     };
     float cx = o.x + 14.0f, cellY = mx.y - 34.0f;
+    // Clip the cells so a long brand string can never bleed into the watermark.
+    float clipR = mx.x - 190.0f;
+    dl->PushClipRect(ImVec2(o.x, sy), ImVec2(clipR, mx.y), true);
     for (int i = 0; i < 5; ++i) {
         caps_at(dl, g_mono, 9.0f, ImVec2(cx, cellY), PAL.scrMuted, cells[i].k, 1.5f);
         ImU32 vc;
@@ -2997,6 +3016,7 @@ static void draw_viewport(ImDrawList *dl, ImVec2 o, float w, float h, float fps,
                         IM_COL32(255, 255, 255, 16), 1.0f);
         }
     }
+    dl->PopClipRect();
 }
 
 // One menu list row.
@@ -3711,7 +3731,9 @@ extern "C" int aio_run_imgui_shell(HINSTANCE hInstance) {
         ImGui::PopStyleVar();
 
         ImGui::Render();
-        const float clear[4] = {0.027f, 0.039f, 0.055f, 1.0f};  // shell backdrop (both hosts)
+        // Shell backdrop follows the theme; a fixed dark clear made every
+        // translucent light-surface composite end up muddy.
+        const float clear[4] = {g_clear_rgb[0], g_clear_rgb[1], g_clear_rgb[2], 1.0f};
         // Honor the present-mode toggle; a running in-process bench forces Uncapped so
         // it samples the scene as fast as the GPU allows.
         bool want_vsync = (g_present_vsync && g_bench_ip_row < 0);
