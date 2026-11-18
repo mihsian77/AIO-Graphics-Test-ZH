@@ -31,6 +31,10 @@ import tempfile
 BTC_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                        "binary_to_compressed_c.cpp")
 
+# Constant head.modified (fontTools counts seconds from 1904-01-01). Keeps the
+# subset byte-identical across runs so font_cjk.inc only changes when the text does.
+FIXED_EPOCH = 0
+
 
 def collect_chars(src_dir):
     """Scan source files and return the set of chars to include."""
@@ -73,14 +77,20 @@ def subset_font(ttc_path, font_number, chars, out_ttf):
     opts.name_languages = ["*"]
     opts.notdef_outline = True
     opts.recalc_bounds = True
-    opts.recalc_timestamp = True
+    # Stamp-free output: the timestamp is what made two runs over the same source
+    # produce different compressed bytes (same size, ~20 bytes apart), which turned
+    # every text change into a 300 KB diff of font_cjk.inc.
+    opts.recalc_timestamp = False
     opts.drop_tables = ["DSIG"]
 
     font = TTFont(ttc_path, fontNumber=font_number)
     subsetter = Subsetter(options=opts)
     subsetter.populate(text="".join(sorted(chars)))
     subsetter.subset(font)
-    font.save(out_ttf)
+    if "head" in font:
+        font["head"].modified = FIXED_EPOCH   # constant so the header is reproducible
+    font.recalcTimestamp = False   # TTFont gates head.modified on this flag at save
+    font.save(out_ttf, reorderTables=True)
     return os.path.getsize(out_ttf)
 
 
