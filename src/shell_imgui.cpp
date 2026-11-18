@@ -2490,8 +2490,10 @@ static void draw_bench_pane(ImVec2 o, float w, float h) {
         float vw = text_w(g_mono, 12.5f, vb);
         bold_at(ldl, g_mono, 12.5f, ImVec2(barX + barW + valW - vw + 2.0f, ry + 7.0f), PAL.scrText, vb);
         if (r.avg > 0.0f && r.state == 0) {
-            char mm[48]; snprintf(mm, sizeof(mm), "%.0f/%.0f  1%%%.0f", r.mn, r.mx, g_brow_low1[i]);
-            text_at(ldl, g_mono_sm, 9.0f, ImVec2(barX, ry + 19.0f), PAL.scrMuted, mm);
+            char mm[64];
+            snprintf(mm, sizeof(mm), "最低 %.0f · 最高 %.0f · 1%% 低 %.0f fps",
+                     r.mn, r.mx, g_brow_low1[i]);
+            text_at(ldl, g_mono_sm, 10.0f, ImVec2(barX, ry + 18.0f), PAL.scrMuted, mm);
         }
         // Run button
         char rid[16]; snprintf(rid, sizeof(rid), "##run%d", i);
